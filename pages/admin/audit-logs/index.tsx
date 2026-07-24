@@ -7,8 +7,14 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { usePagination, useDebounce } from "@/hooks/index";
-import { AuditAction } from "@/types/index";
+//import { AuditAction } from "@/types/index";
+import { AUDIT_ACTIONS, type AuditActionType } from "@/types/index";
 
+const [actionFilter, setActionFilter] = useState<AuditActionType | "">("");
+<select className="form-select" style={{ minWidth: 160 }} value={actionFilter} onChange={(e) => { setActionFilter(e.target.value as AuditActionType | ""); setPage(1); }}>
+   <option value="">All Actions</option>
+    {Object.values(AUDIT_ACTIONS).map(a => <option key={a} value={a}>{a}</option>)}
+</select>
 const actionColor: Record<string, string> = {
   LOGIN: "#1565c0", LOGOUT: "#757575", CREATE: "#2e7d32", READ: "#546e7a",
   UPDATE: "#e65100", DELETE: "#c62828", FILE_UPLOAD: "#6a1b9a",
