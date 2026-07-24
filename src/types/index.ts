@@ -21,6 +21,7 @@ export {
   DOCUMENT_TYPES,
   PRACTICE_AREAS,
   NIGERIAN_STATES,
+  AUDIT_ACTIONS,
   type UserRoleType,
   type CaseStatusType,
   type CasePriorityType,
@@ -32,6 +33,7 @@ export {
   type DocumentTypeValue,
   type PracticeAreaType,
   type NigerianStateType,
+  type AuditActionType,
 } from "@/lib/constants";
 
 // ── Auth session user (stored in JWT — what pages receive from useAuth)
