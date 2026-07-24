@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /client/
+Disallow: /lawyer/
+Disallow: /admin/
+
+Sitemap: https://ddonietanandco.com/sitemap.xml

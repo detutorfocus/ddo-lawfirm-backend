@@ -1,0 +1,596 @@
+// ============================================================
+// D.D. ONIETAN (SAN) & CO. — PRISMA DATABASE SCHEMA
+// Database: PostgreSQL
+// ORM: Prisma v5
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  LAWYER
+  CLIENT
+}
+
+enum CaseStatus {
+  PENDING
+  ACTIVE
+  HEARING_SCHEDULED
+  JUDGMENT_DELIVERED
+  CLOSED
+  ARCHIVED
+}
+
+enum CasePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum DocumentType {
+  COURT_FILING
+  AFFIDAVIT
+  CONTRACT
+  EVIDENCE
+  JUDGMENT
+  LEGAL_OPINION
+  INVOICE
+  CORRESPONDENCE
+  OTHER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum PublicationStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum NotificationType {
+  CASE_UPDATE
+  HEARING_REMINDER
+  DOCUMENT_UPLOADED
+  MESSAGE_RECEIVED
+  APPOINTMENT_CONFIRMED
+  TASK_ASSIGNED
+  INVOICE_GENERATED
+  SYSTEM
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum AuditAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  FILE_UPLOAD
+  FILE_DOWNLOAD
+  PERMISSION_CHANGE
+}
+
+// ─────────────────────────────────────────────
+// USER & AUTHENTICATION
+// ─────────────────────────────────────────────
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  role              UserRole  @default(CLIENT)
+  firstName         String
+  lastName          String
+  phone             String?
+  profilePhoto      String?   // S3 URL
+  isActive          Boolean   @default(true)
+  isEmailVerified   Boolean   @default(false)
+  emailVerifyToken  String?
+  passwordResetToken String?
+  passwordResetExpiry DateTime?
+  twoFactorSecret   String?
+  twoFactorEnabled  Boolean   @default(false)
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  lawyer            Lawyer?
+  client            Client?
+  sessions          Session[]
+  auditLogs         AuditLog[]
+  sentMessages      Message[]       @relation("SentMessages")
+  receivedMessages  Message[]       @relation("ReceivedMessages")
+  receivedDocuments Document[] @relation("DocumentRecipient")
+  notifications     Notification[]
+  tasks             Task[]          @relation("AssignedTasks")
+  createdTasks      Task[]          @relation("CreatedTasks")
+
+  @@map("users")
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  ipAddress   String?
+  userAgent   String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ─────────────────────────────────────────────
+// LAWYER PROFILE
+// ─────────────────────────────────────────────
+
+model Lawyer {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  barNumber           String    @unique
+  title               String    // e.g. "SAN", "Esq."
+  position            String    // e.g. "Principal Partner", "Senior Associate"
+  specializations     String[]
+  biography           String    @db.Text
+  qualifications      String[]
+  certifications      String[]
+  courtAdmissions     String[]
+  professionalMemberships String[]
+  yearsOfExperience   Int
+  isAvailable         Boolean   @default(true)
+  hourlyRate          Decimal   @db.Decimal(10, 2)
+  profilePhotoUrl     String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cases               CaseLawyer[]
+  appointments        Appointment[]
+  publications        Publication[]
+  tasks               Task[]        @relation("LawyerTasks")
+
+  @@map("lawyers")
+}
+
+// ─────────────────────────────────────────────
+// CLIENT PROFILE
+// ─────────────────────────────────────────────
+
+model Client {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  clientNumber    String    @unique @default(cuid())
+  companyName     String?
+  industry        String?
+  address         String?
+  city            String?
+  state           String?
+  country         String    @default("Nigeria")
+  postalCode      String?
+  nin             String?   // National Identification Number
+  rcNumber        String?   // CAC Registration (for companies)
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cases           Case[]
+  appointments    Appointment[]
+  invoices        Invoice[]
+  documents       Document[]
+
+  @@map("clients")
+}
+
+// ─────────────────────────────────────────────
+// CASE MANAGEMENT
+// ─────────────────────────────────────────────
+
+model Case {
+  id              String        @id @default(cuid())
+  caseNumber      String        @unique
+  title           String
+  description     String        @db.Text
+  clientId        String
+  courtName       String?
+  courtLocation   String?
+  filingDate      DateTime?
+  status          CaseStatus    @default(PENDING)
+  priority        CasePriority  @default(MEDIUM)
+  practiceArea    String
+  estimatedValue  Decimal?      @db.Decimal(15, 2)
+  retainerAmount  Decimal?      @db.Decimal(15, 2)
+  notes           String?       @db.Text
+  isArchived      Boolean       @default(false)
+  closedAt        DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  client          Client        @relation(fields: [clientId], references: [id])
+  lawyers         CaseLawyer[]
+  hearings        Hearing[]
+  documents       Document[]    @relation("CaseDocuments")
+  tasks           Task[]
+  invoices        Invoice[]
+  updates         CaseUpdate[]
+  timeline        CaseTimeline[]
+
+  @@map("cases")
+}
+
+model CaseLawyer {
+  id          String    @id @default(cuid())
+  caseId      String
+  lawyerId    String
+  role        String    @default("Lead Counsel") // Lead Counsel, Associate, etc.
+  assignedAt  DateTime  @default(now())
+  removedAt   DateTime?
+  isActive    Boolean   @default(true)
+
+  case        Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  lawyer      Lawyer    @relation(fields: [lawyerId], references: [id])
+
+  @@unique([caseId, lawyerId])
+  @@map("case_lawyers")
+}
+
+model CaseUpdate {
+  id          String    @id @default(cuid())
+  caseId      String
+  authorId    String
+  title       String
+  content     String    @db.Text
+  isVisibleToClient Boolean @default(true)
+  createdAt   DateTime  @default(now())
+
+  case        Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("case_updates")
+}
+
+model CaseTimeline {
+  id          String    @id @default(cuid())
+  caseId      String
+  eventDate   DateTime
+  eventType   String
+  description String
+  createdBy   String
+  createdAt   DateTime  @default(now())
+
+  case        Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("case_timeline")
+}
+
+// ─────────────────────────────────────────────
+// HEARINGS & CALENDAR
+// ─────────────────────────────────────────────
+
+model Hearing {
+  id            String    @id @default(cuid())
+  caseId        String
+  hearingDate   DateTime
+  court         String
+  judge         String?
+  hearingType   String    // e.g., "Mention", "Hearing", "Judgment"
+  result        String?
+  nextDate      DateTime?
+  notes         String?   @db.Text
+  isCompleted   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  case          Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("hearings")
+}
+
+model Appointment {
+  id            String              @id @default(cuid())
+  clientId      String
+  lawyerId      String
+  scheduledAt   DateTime
+  duration      Int                 @default(60)  // minutes
+  type          String              @default("Consultation")
+  status        AppointmentStatus   @default(PENDING)
+  subject       String
+  notes         String?             @db.Text
+  meetingLink   String?
+  confirmationSentAt DateTime?
+  reminderSentAt     DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  client        Client    @relation(fields: [clientId], references: [id])
+  lawyer        Lawyer    @relation(fields: [lawyerId], references: [id])
+
+  @@map("appointments")
+}
+
+// ─────────────────────────────────────────────
+// DOCUMENT MANAGEMENT
+// ─────────────────────────────────────────────
+
+model Document {
+  id              String        @id @default(cuid())
+  title           String
+  description     String?
+  type            DocumentType  @default(OTHER)
+  fileName        String
+  fileSize        Int           // bytes
+  mimeType        String
+  s3Key           String        @unique
+  s3Bucket        String
+  s3Url           String?
+  caseId          String?
+  clientId        String?
+  recipientId     String?
+  uploadedById    String
+  isConfidential  Boolean       @default(false)
+  expiresAt       DateTime?
+  downloadCount   Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  case            Case?         @relation("CaseDocuments", fields: [caseId], references: [id])
+   recipient       User?         @relation("DocumentRecipient", fields: [recipientId], references: [id])
+  client          Client?       @relation(fields: [clientId], references: [id])
+
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────────
+// TASK MANAGEMENT
+// ─────────────────────────────────────────────
+
+model Task {
+  id            String        @id @default(cuid())
+  title         String
+  description   String?       @db.Text
+  caseId        String?
+  assignedToId  String
+  createdById   String
+  lawyerId      String?
+  status        TaskStatus    @default(TODO)
+  priority      TaskPriority  @default(MEDIUM)
+  dueDate       DateTime?
+  completedAt   DateTime?
+  tags          String[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  case          Case?         @relation(fields: [caseId], references: [id])
+  assignedTo    User          @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  createdBy     User          @relation("CreatedTasks", fields: [createdById], references: [id])
+  lawyer        Lawyer?       @relation("LawyerTasks", fields: [lawyerId], references: [id])
+
+  @@map("tasks")
+}
+
+// ─────────────────────────────────────────────
+// MESSAGING
+// ─────────────────────────────────────────────
+
+model Message {
+  id          String        @id @default(cuid())
+  senderId    String
+  receiverId  String
+  subject     String?
+  content     String        @db.Text
+  status      MessageStatus @default(SENT)
+  readAt      DateTime?
+  caseId      String?
+  parentId    String?       // For threading
+  createdAt   DateTime      @default(now())
+
+  sender      User          @relation("SentMessages", fields: [senderId], references: [id])
+  receiver    User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  parent      Message?      @relation("MessageThread", fields: [parentId], references: [id])
+  replies     Message[]     @relation("MessageThread")
+
+  @@map("messages")
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────
+
+model Notification {
+  id          String            @id @default(cuid())
+  userId      String
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?
+  isRead      Boolean           @default(false)
+  readAt      DateTime?
+  createdAt   DateTime          @default(now())
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────
+// PUBLICATIONS
+// ─────────────────────────────────────────────
+
+model Publication {
+  id          String              @id @default(cuid())
+  title       String
+  content     String              @db.Text
+  excerpt     String?             @db.Text
+  slug        String              @unique
+  authorId    String
+  category    String
+  tags        String[]
+  coverImage  String?
+  status      PublicationStatus   @default(DRAFT)
+  publishedAt DateTime?
+  viewCount   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  author      Lawyer              @relation(fields: [authorId], references: [id])
+
+  @@map("publications")
+}
+
+// ─────────────────────────────────────────────
+// INVOICES & BILLING
+// ─────────────────────────────────────────────
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  clientId      String
+  caseId        String?
+  status        InvoiceStatus @default(DRAFT)
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime
+  subtotal      Decimal       @db.Decimal(15, 2)
+  taxRate       Decimal       @db.Decimal(5, 2) @default(7.5)
+  taxAmount     Decimal       @db.Decimal(15, 2)
+  totalAmount   Decimal       @db.Decimal(15, 2)
+  paidAmount    Decimal       @db.Decimal(15, 2) @default(0)
+  paidAt        DateTime?
+  notes         String?       @db.Text
+  lineItems     Json          // Array of { description, qty, rate, amount }
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  client        Client        @relation(fields: [clientId], references: [id])
+  case          Case?         @relation(fields: [caseId], references: [id])
+
+  @@map("invoices")
+}
+
+// ─────────────────────────────────────────────
+// CONSULTATION BOOKINGS (Public Form)
+// ─────────────────────────────────────────────
+
+model ConsultationRequest {
+  id              String    @id @default(cuid())
+  fullName        String
+  email           String
+  phone           String
+  serviceNeeded   String?
+  preferredDate   DateTime?
+  preferredTime   String?
+  message         String?   @db.Text
+  status          String    @default("NEW") // NEW, CONTACTED, CONVERTED, REJECTED
+  assignedToId    String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("consultation_requests")
+}
+
+// ─────────────────────────────────────────────
+// NEWSLETTER
+// ─────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id            String    @id @default(cuid())
+  fullName      String
+  email         String    @unique
+  isActive      Boolean   @default(true)
+  subscribedAt  DateTime  @default(now())
+  unsubscribedAt DateTime?
+  source        String    @default("website")
+
+  @@map("newsletter_subscribers")
+}
+
+// ─────────────────────────────────────────────
+// CONTACT FORM SUBMISSIONS
+// ─────────────────────────────────────────────
+
+model ContactSubmission {
+  id          String    @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String
+  message     String    @db.Text
+  isRead      Boolean   @default(false)
+  repliedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("contact_submissions")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOGS — Security & Compliance
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  userId      String?
+  action      AuditAction
+  resource    String      // e.g., "Case", "Document", "User"
+  resourceId  String?
+  metadata    Json?       // Additional context
+  ipAddress   String?
+  userAgent   String?
+  success     Boolean     @default(true)
+  errorMsg    String?
+  createdAt   DateTime    @default(now())
+
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}

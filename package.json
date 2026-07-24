@@ -1,0 +1,72 @@
+{
+  "name": "ddo-onietan-lawfirm",
+  "version": "1.0.0",
+  "description": "Enterprise backend for D.D. Onietan (SAN) & Co. Law Firm",
+  "private": true,
+  "scripts": {
+    "predev": "node scripts/check-env.js",
+    "dev": "next dev -p 3001",
+    "prebuild": "node scripts/check-env.js",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "lint": "next lint",
+    "prisma:generate": "dotenv -e .env.local -- prisma generate",
+    "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "prisma:migrate:deploy": "dotenv -e .env.local -- prisma migrate deploy",
+    "prisma:studio": "dotenv -e .env.local -- prisma studio",
+    "prisma:seed": "dotenv -e .env.local -- tsx prisma/seed.ts",
+    "prisma:reset": "dotenv -e .env.local -- prisma migrate reset --force",
+    "prisma:push": "dotenv -e .env.local -- prisma db push",
+    "db:test": "dotenv -e .env.local -- node scripts/test-db-connection.js",
+    "prisma:sqlite:generate": "dotenv -e .env.local -- prisma generate --schema=prisma/schema.sqlite.prisma",
+    "prisma:sqlite:push": "dotenv -e .env.local -- prisma db push --schema=prisma/schema.sqlite.prisma",
+    "prisma:sqlite:seed": "dotenv -e .env.local -- tsx prisma/seed.ts",
+    "prisma:sqlite:studio": "dotenv -e .env.local -- prisma studio --schema=prisma/schema.sqlite.prisma",
+    "prisma:sqlite:reset": "node scripts/reset-sqlite.js"
+  },
+  "prisma": {
+    "seed": "dotenv -e .env.local -- tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.1",
+    "@trpc/client": "^10.45.1",
+    "@trpc/next": "^10.45.1",
+    "@trpc/react-query": "^10.45.1",
+    "@trpc/server": "^10.45.1",
+    "next": "^14.2.5",
+    "next-auth": "^4.24.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zod": "^3.22.4",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "@aws-sdk/client-s3": "^3.481.0",
+    "@aws-sdk/s3-request-presigner": "^3.481.0",
+    "resend": "^2.1.0",
+    "speakeasy": "^2.0.0",
+    "qrcode": "^1.5.3",
+    "date-fns": "^3.0.6",
+    "superjson": "^2.2.1",
+    "@tanstack/react-query": "^4.36.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.6",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.2.46",
+    "@types/react-dom": "^18.2.18",
+    "@types/speakeasy": "^2.0.10",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.2.5",
+    "prisma": "^5.7.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "dotenv-cli": "^7.4.2",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

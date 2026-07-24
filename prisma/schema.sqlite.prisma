@@ -1,0 +1,573 @@
+// ============================================================
+// D.D. ONIETAN (SAN) & CO. — PRISMA DATABASE SCHEMA (DEV MODE)
+// Database: SQLite — single local file, zero network dependency
+// ORM: Prisma v5
+//
+// WHY THIS FILE EXISTS:
+// Neon/Postgres kept failing with "Can't reach database server" —
+// cold-start suspension and intermittent drops on the free tier. This
+// schema removes that entire category of problem for local dev: no
+// network, no SSL config, no signup, works completely offline.
+//
+// IMPORTANT - VERIFY BEFORE USE:
+// This file was reconstructed from our conversation history, including
+// the recipientId / recipient fields added to the Document model
+// for the "client sends evidence to a specific lawyer" feature. If your
+// REAL prisma/schema.prisma has since diverged from this, this SQLite
+// version could be out of sync — compare field-by-field if unsure.
+//
+// This is functionally IDENTICAL to schema.prisma except:
+//   1. datasource provider = "sqlite" instead of "postgresql"
+//   2. String[] arrays -> String (JSON-encoded) - SQLite has no array type
+//   3. Decimal -> Float - SQLite has no arbitrary-precision decimal type
+//   4. Json -> String (JSON-encoded) - SQLite has no native JSON column
+//   5. @db.Text removed - SQLite has no separate TEXT type
+//   6. Native enums kept AS Prisma enums - emulated fine on SQLite
+//
+// prisma/seed.ts already handles array/JSON encoding automatically
+// via its arrayField()/jsonField() helpers - detects "file:" URLs.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+// ─────────────────────────────────────────────
+// USER & AUTHENTICATION
+// ─────────────────────────────────────────────
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  role              String  @default("CLIENT")
+  firstName         String
+  lastName          String
+  phone             String?
+  profilePhoto      String?
+  isActive          Boolean   @default(true)
+  isEmailVerified   Boolean   @default(false)
+  emailVerifyToken  String?
+  passwordResetToken String?
+  passwordResetExpiry DateTime?
+  twoFactorSecret   String?
+  twoFactorEnabled  Boolean   @default(false)
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  lawyer            Lawyer?
+  client            Client?
+  sessions          Session[]
+  auditLogs         AuditLog[]
+  sentMessages      Message[]       @relation("SentMessages")
+  receivedMessages  Message[]       @relation("ReceivedMessages")
+  receivedDocuments Document[]      @relation("DocumentRecipient")
+  notifications     Notification[]
+  tasks             Task[]          @relation("AssignedTasks")
+  createdTasks      Task[]          @relation("CreatedTasks")
+
+  @@map("users")
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   @unique
+  ipAddress   String?
+  userAgent   String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ─────────────────────────────────────────────
+// LAWYER PROFILE
+// specializations, qualifications, certifications, courtAdmissions,
+// professionalMemberships were String[] on Postgres. JSON-encoded
+// String here — prisma/seed.ts's arrayField() helper handles this.
+// ─────────────────────────────────────────────
+
+model Lawyer {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  barNumber           String    @unique
+  title               String
+  position            String
+  specializations     String    @default("[]")
+  biography           String
+  qualifications      String    @default("[]")
+  certifications      String    @default("[]")
+  courtAdmissions     String    @default("[]")
+  professionalMemberships String @default("[]")
+  yearsOfExperience   Int
+  isAvailable         Boolean   @default(true)
+  hourlyRate          Float
+  profilePhotoUrl     String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cases               CaseLawyer[]
+  appointments        Appointment[]
+  publications        Publication[]
+  tasks               Task[]        @relation("LawyerTasks")
+
+  @@map("lawyers")
+}
+
+// ─────────────────────────────────────────────
+// CLIENT PROFILE
+// ─────────────────────────────────────────────
+
+model Client {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  clientNumber    String    @unique @default(cuid())
+  companyName     String?
+  industry        String?
+  address         String?
+  city            String?
+  state           String?
+  country         String    @default("Nigeria")
+  postalCode      String?
+  nin             String?
+  rcNumber        String?
+  notes           String?
+  status          String    @default("PENDING") // PENDING | ACTIVE | INACTIVE | ARCHIVED — see src/lib/constants.ts CLIENT_STATUSES
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cases           Case[]
+  appointments    Appointment[]
+  invoices        Invoice[]
+  documents       Document[]
+
+  @@map("clients")
+}
+
+// ─────────────────────────────────────────────
+// CASE MANAGEMENT
+// estimatedValue, retainerAmount were Decimal @db.Decimal(15,2) on
+// Postgres. Float here — fine for dev, not for real financial
+// precision in production.
+// ─────────────────────────────────────────────
+
+model Case {
+  id              String        @id @default(cuid())
+  caseNumber      String        @unique
+  title           String
+  description     String
+  clientId        String
+  courtName       String?
+  courtLocation   String?
+  filingDate      DateTime?
+  status          String    @default("PENDING")
+  priority        String  @default("MEDIUM")
+  practiceArea    String
+  estimatedValue  Float?
+  retainerAmount  Float?
+  notes           String?
+  isArchived      Boolean       @default(false)
+  closedAt        DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  client          Client        @relation(fields: [clientId], references: [id])
+  lawyers         CaseLawyer[]
+  hearings        Hearing[]
+  documents       Document[]    @relation("CaseDocuments")
+  tasks           Task[]
+  invoices        Invoice[]
+  updates         CaseUpdate[]
+  timeline        CaseTimeline[]
+
+  @@map("cases")
+}
+
+model CaseLawyer {
+  id          String    @id @default(cuid())
+  caseId      String
+  lawyerId    String
+  role        String    @default("Lead Counsel")
+  assignedAt  DateTime  @default(now())
+  removedAt   DateTime?
+  isActive    Boolean   @default(true)
+
+  case        Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  lawyer      Lawyer    @relation(fields: [lawyerId], references: [id])
+
+  @@unique([caseId, lawyerId])
+  @@map("case_lawyers")
+}
+
+model CaseUpdate {
+  id          String    @id @default(cuid())
+  caseId      String
+  authorId    String
+  title       String
+  content     String
+  isVisibleToClient Boolean @default(true)
+  createdAt   DateTime  @default(now())
+
+  case        Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("case_updates")
+}
+
+model CaseTimeline {
+  id          String    @id @default(cuid())
+  caseId      String
+  eventDate   DateTime
+  eventType   String
+  description String
+  createdBy   String
+  createdAt   DateTime  @default(now())
+
+  case        Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("case_timeline")
+}
+
+// ─────────────────────────────────────────────
+// HEARINGS & CALENDAR
+// ─────────────────────────────────────────────
+
+model Hearing {
+  id            String    @id @default(cuid())
+  caseId        String
+  hearingDate   DateTime
+  court         String
+  judge         String?
+  hearingType   String
+  result        String?
+  nextDate      DateTime?
+  notes         String?
+  isCompleted   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  case          Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@map("hearings")
+}
+
+model Appointment {
+  id            String              @id @default(cuid())
+  clientId      String
+  lawyerId      String
+  scheduledAt   DateTime
+  duration      Int                 @default(60)
+  type          String              @default("Consultation")
+  status        String   @default("PENDING")
+  subject       String
+  notes         String?
+  meetingLink   String?
+  confirmationSentAt DateTime?
+  reminderSentAt     DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  client        Client    @relation(fields: [clientId], references: [id])
+  lawyer        Lawyer    @relation(fields: [lawyerId], references: [id])
+
+  @@map("appointments")
+}
+
+// ─────────────────────────────────────────────
+// DOCUMENT MANAGEMENT
+// UPDATED: includes recipientId/recipient for the "client sends
+// evidence directly to a specific lawyer/admin" feature added this
+// session — see document.router.ts and pages/client/documents.tsx.
+// ─────────────────────────────────────────────
+
+model Document {
+  id              String        @id @default(cuid())
+  title           String
+  description     String?
+  type            String  @default("OTHER")
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  s3Key           String        @unique
+  s3Bucket        String
+  s3Url           String?
+  caseId          String?
+  clientId        String?
+  recipientId     String?
+  uploadedById    String
+  isConfidential  Boolean       @default(false)
+  expiresAt       DateTime?
+  downloadCount   Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  case            Case?         @relation("CaseDocuments", fields: [caseId], references: [id])
+  client          Client?       @relation(fields: [clientId], references: [id])
+  recipient       User?         @relation("DocumentRecipient", fields: [recipientId], references: [id])
+
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────────
+// TASK MANAGEMENT
+// tags was String[] on Postgres - JSON-encoded String here.
+// ─────────────────────────────────────────────
+
+model Task {
+  id            String        @id @default(cuid())
+  title         String
+  description   String?
+  caseId        String?
+  assignedToId  String
+  createdById   String
+  lawyerId      String?
+  status        String    @default("TODO")
+  priority      String  @default("MEDIUM")
+  dueDate       DateTime?
+  completedAt   DateTime?
+  tags          String        @default("[]")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  case          Case?         @relation(fields: [caseId], references: [id])
+  assignedTo    User          @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  createdBy     User          @relation("CreatedTasks", fields: [createdById], references: [id])
+  lawyer        Lawyer?       @relation("LawyerTasks", fields: [lawyerId], references: [id])
+
+  @@map("tasks")
+}
+
+// ─────────────────────────────────────────────
+// MESSAGING
+// ─────────────────────────────────────────────
+
+model Message {
+  id          String        @id @default(cuid())
+  senderId    String
+  receiverId  String
+  subject     String?
+  content     String
+  status      String @default("SENT")
+  readAt      DateTime?
+  caseId      String?
+  parentId    String?
+  createdAt   DateTime      @default(now())
+
+  sender      User          @relation("SentMessages", fields: [senderId], references: [id])
+  receiver    User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  parent      Message?      @relation("MessageThread", fields: [parentId], references: [id])
+  replies     Message[]     @relation("MessageThread")
+
+  @@map("messages")
+}
+
+// ─────────────────────────────────────────────
+// NOTIFICATIONS
+// data was Json? on Postgres - JSON-encoded String? here.
+// ─────────────────────────────────────────────
+
+model Notification {
+  id          String            @id @default(cuid())
+  userId      String
+  type        String
+  title       String
+  message     String
+  data        String?
+  isRead      Boolean           @default(false)
+  readAt      DateTime?
+  createdAt   DateTime          @default(now())
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────
+// PUBLICATIONS
+// tags was String[] on Postgres - JSON-encoded String here.
+// ─────────────────────────────────────────────
+
+model Publication {
+  id          String              @id @default(cuid())
+  title       String
+  content     String
+  excerpt     String?
+  slug        String              @unique
+  authorId    String
+  category    String
+  tags        String              @default("[]")
+  coverImage  String?
+  status      String   @default("DRAFT")
+  publishedAt DateTime?
+  viewCount   Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  author      Lawyer              @relation(fields: [authorId], references: [id])
+
+  @@map("publications")
+}
+
+// ─────────────────────────────────────────────
+// INVOICES & BILLING
+// All Decimal fields -> Float. lineItems Json -> String (JSON).
+// ─────────────────────────────────────────────
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  clientId      String
+  caseId        String?
+  status        String @default("DRAFT")
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime
+  subtotal      Float
+  taxRate       Float         @default(7.5)
+  taxAmount     Float
+  totalAmount   Float
+  paidAmount    Float         @default(0)
+  paidAt        DateTime?
+  notes         String?
+  lineItems     String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  client        Client        @relation(fields: [clientId], references: [id])
+  case          Case?         @relation(fields: [caseId], references: [id])
+
+  @@map("invoices")
+}
+
+// ─────────────────────────────────────────────
+// CONSULTATION BOOKINGS (Public Form)
+// ─────────────────────────────────────────────
+
+model ConsultationRequest {
+  id              String    @id @default(cuid())
+  fullName        String
+  email           String
+  phone           String
+  serviceNeeded   String?
+  preferredDate   DateTime?
+  preferredTime   String?
+  message         String?
+  status          String    @default("NEW")
+  assignedToId    String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("consultation_requests")
+}
+
+// ─────────────────────────────────────────────
+// NEWSLETTER
+// ─────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id            String    @id @default(cuid())
+  fullName      String
+  email         String    @unique
+  isActive      Boolean   @default(true)
+  subscribedAt  DateTime  @default(now())
+  unsubscribedAt DateTime?
+  source        String    @default("website")
+
+  @@map("newsletter_subscribers")
+}
+
+// ─────────────────────────────────────────────
+// CONTACT FORM SUBMISSIONS
+// ─────────────────────────────────────────────
+
+model ContactSubmission {
+  id          String    @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String
+  message     String
+  isRead      Boolean   @default(false)
+  repliedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("contact_submissions")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOGS - Security & Compliance
+// metadata was Json? on Postgres - JSON-encoded String? here.
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  userId      String?
+  action      String
+  resource    String
+  resourceId  String?
+  metadata    String?
+  ipAddress   String?
+  userAgent   String?
+  success     Boolean     @default(true)
+  errorMsg    String?
+  createdAt   DateTime    @default(now())
+
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// WEBSITE / PLATFORM SETTINGS
+// Single-row table (id is always "singleton") backing the Admin
+// Settings page — firm info, security config, feature flags. Stored
+// as one row rather than key-value pairs for simplicity, since this
+// data is small, structured, and read/written as a whole.
+// ─────────────────────────────────────────────
+
+model WebsiteSettings {
+  id                        String   @id @default("singleton")
+
+  // Firm Info tab
+  firmName                  String   @default("D.D. Onietan (SAN) & Co.")
+  firmTagline                String   @default("Barristers & Solicitors")
+  firmEmail                 String   @default("info@ddonietanandco.com")
+  firmPhone                 String   @default("+234 803 XXX XXXX")
+  firmAddress               String   @default("Plot 14B, Adetokunbo Ademola Crescent, Wuse II, Abuja, FCT, Nigeria")
+  firmWebsite               String   @default("https://ddonietanandco.com")
+  firmRcNumber               String   @default("")
+
+  // Security tab
+  require2FA                 Boolean  @default(false)
+  maxLoginAttempts           Int      @default(5)
+  sessionDays                 Int      @default(7)
+  rateLimitMax                Int      @default(100)
+
+  // Feature flags tab
+  enableConsultationBooking   Boolean  @default(true)
+  enableNewsletter            Boolean  @default(true)
+  enableClientPortal          Boolean  @default(true)
+  enableDocumentUpload        Boolean  @default(true)
+  enableOnlinePayments        Boolean  @default(false)
+  enableVideoConsultation     Boolean  @default(false)
+  maintenanceMode             Boolean  @default(false)
+
+  updatedAt                   DateTime @updatedAt
+  updatedById                 String?
+
+  @@map("website_settings")
+}
