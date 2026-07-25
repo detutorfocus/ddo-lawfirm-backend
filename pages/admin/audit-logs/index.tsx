@@ -25,7 +25,7 @@ const actionColor: Record<string, string> = {
 export default function AuditLogsPage() {
   const { isAuthenticated } = useAuth();
   const { page, pageSize, setPage } = usePagination(1, 50);
-  const [actionFilter, setActionFilter] = useState<AuditAction | "">("");
+  const [actionFilter, setActionFilter] = useState<AuditActionType | "">("");
   const [resource, setResource] = useState("");
   const debouncedResource = useDebounce(resource, 300);
 
