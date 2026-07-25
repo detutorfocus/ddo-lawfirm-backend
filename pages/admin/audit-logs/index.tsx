@@ -48,7 +48,7 @@ export default function AuditLogsPage() {
           {/* Filters */}
           <div className="card" style={{ marginBottom: 18, padding: "0.875rem 1.25rem" }}>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-              <select className="form-select" style={{ minWidth: 160 }} value={actionFilter} onChange={(e) => { setActionFilter(e.target.value as AuditAction | ""); setPage(1); }}>
+              <select className="form-select" style={{ minWidth: 160 }} value={actionFilter} onChange={(e) => { setActionFilter(e.target.value as AuditActionType | ""); setPage(1); }}>
                 <option value="">All Actions</option>
                 {Object.values(AuditAction).map(a => <option key={a} value={a}>{a}</option>)}
               </select>
