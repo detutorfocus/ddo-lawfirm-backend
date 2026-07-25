@@ -9,7 +9,8 @@ import { trpc } from "@/lib/trpc";
 import { usePagination, useDebounce } from "@/hooks/index";
 //import { AuditAction } from "@/types/index";
 import { AUDIT_ACTIONS, type AuditActionType } from "@/types/index";
-
+const { isAuthenticated } = useAuth();
+const { page, pageSize, setPage } = usePagination(1, 50);
 const [actionFilter, setActionFilter] = useState<AuditActionType | "">("");
 <select className="form-select" style={{ minWidth: 160 }} value={actionFilter} onChange={(e) => { setActionFilter(e.target.value as AuditActionType | ""); setPage(1); }}>
    <option value="">All Actions</option>
