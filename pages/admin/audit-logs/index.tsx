@@ -50,7 +50,7 @@ export default function AuditLogsPage() {
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
               <select className="form-select" style={{ minWidth: 160 }} value={actionFilter} onChange={(e) => { setActionFilter(e.target.value as AuditActionType | ""); setPage(1); }}>
                 <option value="">All Actions</option>
-                {Object.values(AuditAction).map(a => <option key={a} value={a}>{a}</option>)}
+                {Object.values(AuditActionType).map(a => <option key={a} value={a}>{a}</option>)}
               </select>
               <input className="form-input" style={{ flex: 1, minWidth: 160 }} placeholder="Filter by resource (e.g. Case, Document, User)..." value={resource} onChange={(e) => { setResource(e.target.value); setPage(1); }} />
               {(actionFilter || resource) && <button className="btn btn-ghost" style={{ fontSize: "0.8rem" }} onClick={() => { setActionFilter(""); setResource(""); }}>Clear</button>}
