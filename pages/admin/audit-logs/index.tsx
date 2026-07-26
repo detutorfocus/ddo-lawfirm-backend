@@ -7,15 +7,8 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { usePagination, useDebounce } from "@/hooks/index";
-//import { AuditAction } from "@/types/index";
 import { AUDIT_ACTIONS, type AuditActionType } from "@/types/index";
-const { isAuthenticated } = useAuth();
-const { page, pageSize, setPage } = usePagination(1, 50);
-const [actionFilter, setActionFilter] = useState<AuditActionType | "">("");
-<select className="form-select" style={{ minWidth: 160 }} value={actionFilter} onChange={(e) => { setActionFilter(e.target.value as AuditActionType | ""); setPage(1); }}>
-   <option value="">All Actions</option>
-    {Object.values(AUDIT_ACTIONS).map(a => <option key={a} value={a}>{a}</option>)}
-</select>
+
 const actionColor: Record<string, string> = {
   LOGIN: "#1565c0", LOGOUT: "#757575", CREATE: "#2e7d32", READ: "#546e7a",
   UPDATE: "#e65100", DELETE: "#c62828", FILE_UPLOAD: "#6a1b9a",
@@ -50,7 +43,7 @@ export default function AuditLogsPage() {
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
               <select className="form-select" style={{ minWidth: 160 }} value={actionFilter} onChange={(e) => { setActionFilter(e.target.value as AuditActionType | ""); setPage(1); }}>
                 <option value="">All Actions</option>
-                {Object.values(AuditActionType).map(a => <option key={a} value={a}>{a}</option>)}
+                {Object.values(AUDIT_ACTIONS).map(a => <option key={a} value={a}>{a}</option>)}
               </select>
               <input className="form-input" style={{ flex: 1, minWidth: 160 }} placeholder="Filter by resource (e.g. Case, Document, User)..." value={resource} onChange={(e) => { setResource(e.target.value); setPage(1); }} />
               {(actionFilter || resource) && <button className="btn btn-ghost" style={{ fontSize: "0.8rem" }} onClick={() => { setActionFilter(""); setResource(""); }}>Clear</button>}
