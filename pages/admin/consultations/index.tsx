@@ -151,7 +151,7 @@ export default function AdminConsultationsPage() {
                   ].map(([k, v]) => (
                    <div key={String(k)} style={{ display: "flex", gap: 10 }}>
                       <span style={{ color: "var(--color-light)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 110 }}>{k}</span>
-                      <span style={{ color: "var(--color-dark)", fontSize: "0.85rem" }}>{v}</span>
+                     <span style={{ color: "var(--color-dark)", fontSize: "0.85rem" }}>{String(v)}</span>
                     </div>
                   ))}
                 </div>
