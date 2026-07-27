@@ -114,7 +114,7 @@ export default function AdminConsultationsPage() {
                           </div>
                           {c.preferredDate && (
                             <div style={{ color: "var(--color-mid)", fontSize: "0.72rem", marginTop: 2 }}>
-                              Preferred: {c.preferredDate}
+                              Preferred: {new Date(c.preferredDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric"})}
                             </div>
                           )}
                         </div>
