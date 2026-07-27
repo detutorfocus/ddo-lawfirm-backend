@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
 import { useAuth } from "src/hooks/useAuth";
-import { UserRole } from "src/types/index";
+import { type UserRoleType } from "src/types/index";
 
 type LoginStep = "credentials" | "2fa";
 type PortalType = "client" | "lawyer" | "admin";
@@ -23,7 +23,7 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      const redirectMap: Record<UserRole, string> = {
+      const redirectMap: Record<UserRoleType, string> = {
         ["ADMIN"]: "/admin/dashboard",
         ["LAWYER"]: "/lawyer/dashboard",
         ["CLIENT"]: "/client/dashboard",
