@@ -11,7 +11,7 @@ import { trpc } from "@/lib/trpc";
 export default function ClientDashboard() {
   const router = useRouter();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
-  const { data: dashboard, isLoading: dashLoading } = trpc.client.getDashboard.useQuery(undefined, {
+  const { data: dashboard, isLoading: dashLoading } = trpc.clients.getDashboard.useQuery(undefined, {
     enabled: isAuthenticated && user?.role === "CLIENT",
   });
   const { data: cases } = trpc.case.getAll.useQuery(
