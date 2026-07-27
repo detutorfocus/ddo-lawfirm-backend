@@ -93,9 +93,9 @@ export default function ClientInvoicesPage() {
                             {new Date(inv.dueDate).toLocaleDateString("en-NG")}
                             {isOverdue && " ⚠️"}
                           </td>
-                          <td style={{ fontWeight: 600 }}>{formatAmount(inv.totalAmount)}</td>
+                          <td style={{ fontWeight: 600 }}>{formatAmount(Number(inv.totalAmount))}</td>
                           <td style={{ color: Number(inv.paidAmount) > 0 ? "#2e7d32" : "var(--color-light)" }}>
-                            {Number(inv.paidAmount) > 0 ? formatAmount(inv.paidAmount) : "—"}
+                            {Number(inv.paidAmount) > 0 ? formatAmount(Number(inv.paidAmount)) : "—"}
                           </td>
                           <td>
                             <span className="badge" style={{ background: isOverdue ? "#fce4ec" : sb.bg, color: isOverdue ? "#c62828" : sb.color, fontSize: "0.62rem" }}>
