@@ -140,7 +140,7 @@ export default function ClientProfilePage() {
                 <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>Two-Factor Authentication</div>
                 <div style={{ color: "var(--color-light)", fontSize: "0.8rem", marginTop: 2 }}>Add an extra layer of security using an authenticator app</div>
               </div>
-              <div style={{ display: "flex", align: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span className={`badge ${me?.twoFactorEnabled ? "badge-success" : "badge-neutral"}`} style={{ fontSize: "0.65rem" }}>{me?.twoFactorEnabled ? "Enabled" : "Disabled"}</span>
                 {!me?.twoFactorEnabled && (
                   <button className="btn btn-outline" style={{ fontSize: "0.78rem" }}
