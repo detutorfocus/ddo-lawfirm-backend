@@ -5,12 +5,9 @@ import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-//import { trpc } from "@/lib/trpc";
-import { AppointmentStatus, PRACTICE_AREAS } from "@/types/index";
+import { trpc } from "@/lib/trpc";
 
-import { type AppointmentStatusType } from "@/types/index";
-// ...
-const statusStyle: Record<AppointmentStatusType, { bg: string; color: string }> = {
+export default function ClientAppointmentsPage() {
   const { isAuthenticated } = useAuth();
   const utils = trpc.useContext();
   const [showForm, setShowForm] = useState(false);
