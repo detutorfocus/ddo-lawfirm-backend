@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useDebounce, usePagination } from "@/hooks/index";
+import { type UserRoleType } from "@/types/index";
 
 export default function AdminUsersPage() {
   const { isAuthenticated } = useAuth();
@@ -15,7 +16,7 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState<string | "">("");
   const debouncedSearch = useDebounce(search, 350);
   const utils = trpc.useContext();
-
+ 
   const { data, isLoading } = trpc.admin.getUsers.useQuery(
     { page, pageSize, role: roleFilter || undefined, search: debouncedSearch || undefined },
     { enabled: isAuthenticated }
@@ -25,7 +26,7 @@ export default function AdminUsersPage() {
     onSuccess: () => utils.admin.getUsers.invalidate(),
   });
 
-  const roleColors: Record<UserRole, { bg: string; color: string }> = {
+  const roleColors: Record<UserRoleType, { bg: string; color: string }> = {
     ADMIN: { bg: "#f3e5f5", color: "#6a1b9a" },
     LAWYER: { bg: "rgba(201,168,76,0.12)", color: "#8B7536" },
     CLIENT: { bg: "#e3f2fd", color: "#1565c0" },
