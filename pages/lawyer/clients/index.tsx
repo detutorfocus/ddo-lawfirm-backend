@@ -11,7 +11,7 @@ export default function LawyerClientsPage() {
   const { page, pageSize, setPage } = usePagination();
   const [search, setSearch] = useState("");
   const dSearch = useDebounce(search, 350);
-  const { data, isLoading } = trpc.client.listAll.useQuery({ page, pageSize, search: dSearch || undefined }, { enabled: isAuthenticated });
+  const { data, isLoading } = trpc.clients.listAll.useQuery({ page, pageSize, search: dSearch || undefined }, { enabled: isAuthenticated });
   return (
     <>
       <Head><title>Clients — Lawyer Portal</title></Head>
