@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useDebounce, usePagination } from "@/hooks/index";
-import { type UserRoleType } from "@/types/index";
+import { USER_ROLES, type UserRoleType } from "@/types/index";
 
 export default function AdminUsersPage() {
   const { isAuthenticated } = useAuth();
@@ -16,7 +16,7 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState<string | "">("");
   const debouncedSearch = useDebounce(search, 350);
   const utils = trpc.useContext();
- 
+
   const { data, isLoading } = trpc.admin.getUsers.useQuery(
     { page, pageSize, role: roleFilter || undefined, search: debouncedSearch || undefined },
     { enabled: isAuthenticated }
@@ -27,9 +27,15 @@ export default function AdminUsersPage() {
   });
 
   const roleColors: Record<UserRoleType, { bg: string; color: string }> = {
-    ADMIN: { bg: "#f3e5f5", color: "#6a1b9a" },
-    LAWYER: { bg: "rgba(201,168,76,0.12)", color: "#8B7536" },
-    CLIENT: { bg: "#e3f2fd", color: "#1565c0" },
+    SUPER_ADMIN:      { bg: "#fce4ec", color: "#ad1457" },
+    ADMIN:            { bg: "#f3e5f5", color: "#6a1b9a" },
+    MANAGING_PARTNER: { bg: "#ede7f6", color: "#4527a0" },
+    LAWYER:           { bg: "rgba(201,168,76,0.12)", color: "#8B7536" },
+    LEGAL_ASSISTANT:  { bg: "#e0f2f1", color: "#00695c" },
+    SECRETARY:        { bg: "#fff3e0", color: "#e65100" },
+    RECEPTIONIST:     { bg: "#fff8e1", color: "#f57f17" },
+    FINANCE_OFFICER:  { bg: "#e8f5e9", color: "#2e7d32" },
+    CLIENT:           { bg: "#e3f2fd", color: "#1565c0" },
   };
 
   return (
@@ -54,7 +60,7 @@ export default function AdminUsersPage() {
               <input className="form-input" style={{ flex: 1, minWidth: 200 }} placeholder="Search by name or email..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
               <select className="form-select" style={{ minWidth: 140 }} value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value as string | ""); setPage(1); }}>
                 <option value="">All Roles</option>
-                {["ADMIN","LAWYER","CLIENT"].map((r) => <option key={r} value={r}>{r}</option>)}
+                {Object.values(USER_ROLES).map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
               {(search || roleFilter) && <button className="btn btn-ghost" style={{ fontSize: "0.8rem" }} onClick={() => { setSearch(""); setRoleFilter(""); }}>Clear</button>}
             </div>
@@ -81,7 +87,7 @@ export default function AdminUsersPage() {
                   </thead>
                   <tbody>
                     {data?.users?.map((u) => {
-                      const rb = roleColors[u.role];
+                      const rb = roleColors[u.role as UserRoleType];
                       return (
                         <tr key={u.id}>
                           <td>
