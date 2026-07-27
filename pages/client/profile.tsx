@@ -16,7 +16,7 @@ export default function ClientProfilePage() {
   const [totpCode, setTotpCode] = useState("");
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3500); };
 
-  const { data: profile } = trpc.client.getMyProfile.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: profile } = trpc.clients.getMyProfile.useQuery(undefined, { enabled: isAuthenticated });
   const { data: me } = trpc.auth.me.useQuery(undefined, { enabled: isAuthenticated });
 
   const [form, setForm] = useState({
@@ -24,8 +24,8 @@ export default function ClientProfilePage() {
     companyName: "", address: "", city: "", state: "",
   });
 
-  const updateProfile = trpc.client.updateProfile.useMutation({
-    onSuccess: () => { utils.client.getMyProfile.invalidate(); utils.auth.me.invalidate(); setEditMode(false); showToast("Profile updated successfully!"); },
+  const updateProfile = trpc.clients.updateProfile.useMutation({
+    onSuccess: () => { utils.clients.getMyProfile.invalidate(); utils.auth.me.invalidate(); setEditMode(false); showToast("Profile updated successfully!"); },
     onError: (err) => showToast(`Error: ${err.message}`),
   });
 
