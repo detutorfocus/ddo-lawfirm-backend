@@ -149,7 +149,7 @@ export default function AdminConsultationsPage() {
                     ["Preferred Time", selectedConsult.preferredTime ?? "Not specified"],
                     ["Submitted", new Date(selectedConsult.createdAt).toLocaleString("en-NG")],
                   ].map(([k, v]) => (
-                    <div key={k} style={{ display: "flex", gap: 10 }}>
+                   <div key={String(k)} style={{ display: "flex", gap: 10 }}>
                       <span style={{ color: "var(--color-light)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 110 }}>{k}</span>
                       <span style={{ color: "var(--color-dark)", fontSize: "0.85rem" }}>{v}</span>
                     </div>
