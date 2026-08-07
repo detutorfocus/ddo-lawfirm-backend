@@ -165,8 +165,9 @@ export default function App() {
   ];
 
   // ── Main website
-  const inp: React.CSSProperties = { background: T.cream, border: `1px solid ${T.border}`, borderRadius: T.radius, color: T.dark, padding: "11px 14px", fontSize: 14, fontFamily: T.sans, outline: "none", width: "100%", boxSizing: "border-box" };  const fgrp = { display: "flex", flexDirection: "column", gap: 6 };
-  const flabel = { fontSize: 11, fontWeight: 700, color: T.mid, letterSpacing: 1.2, textTransform: "uppercase" };
+  const inp: React.CSSProperties = { background: T.cream, border: `1px solid ${T.border}`, borderRadius: T.radius, color: T.dark, padding: "11px 14px", fontSize: 14, fontFamily: T.sans, outline: "none", width: "100%", boxSizing: "border-box" };
+  const fgrp: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 6 };
+  const flabel: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: T.mid, letterSpacing: 1.2, textTransform: "uppercase" };
 
   return (
     <div style={{ fontFamily: T.serif, background: T.cream, color: T.dark, minHeight: "100vh" }}>
