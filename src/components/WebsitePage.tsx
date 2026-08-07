@@ -73,8 +73,14 @@ const Badge = ({ children, style = {} }) => (
   <span style={{ display: "inline-block", background: `${T.gold}18`, color: T.darkGold, padding: "4px 14px", borderRadius: 20, fontSize: 11, fontFamily: T.sans, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", ...style }}>{children}</span>
 );
 
-const GoldBtn = ({ children, onClick, style = {}, outline = false }) => (
-  <button onClick={onClick} style={{
+const GoldBtn = ({ children, onClick, style = {}, outline = false, type = "button" }: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  style?: React.CSSProperties;
+  outline?: boolean;
+  type?: "button" | "submit" | "reset";
+}) => (
+  <button type={type} onClick={onClick} style={{
     background: outline ? "transparent" : `linear-gradient(135deg,${T.gold},${T.darkGold})`,
     color: outline ? T.gold : "#fff",
     border: outline ? `2px solid ${T.gold}` : "none",
@@ -84,7 +90,6 @@ const GoldBtn = ({ children, onClick, style = {}, outline = false }) => (
     ...style,
   }}>{children}</button>
 );
-
 // ── Official Firm Logo — served from /public/images/logo.png
 // Size controls height; width auto-scales to maintain aspect ratio.
 // objectFit: contain ensures the full logo (scales + text) is always visible.
@@ -160,9 +165,9 @@ export default function App() {
   ];
 
   // ── Main website
-  const inp = { background: T.cream, border: `1px solid ${T.border}`, borderRadius: T.radius, color: T.dark, padding: "11px 14px", fontSize: 14, fontFamily: T.sans, outline: "none", width: "100%", boxSizing: "border-box" };
-  const fgrp = { display: "flex", flexDirection: "column", gap: 6 };
-  const flabel = { fontSize: 11, fontWeight: 700, color: T.mid, letterSpacing: 1.2, textTransform: "uppercase" };
+  const inp: React.CSSProperties = { background: T.cream, border: `1px solid ${T.border}`, borderRadius: T.radius, color: T.dark, padding: "11px 14px", fontSize: 14, fontFamily: T.sans, outline: "none", width: "100%", boxSizing: "border-box" };
+  const fgrp: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 6 };
+  const flabel: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: T.mid, letterSpacing: 1.2, textTransform: "uppercase" };
 
   return (
     <div style={{ fontFamily: T.serif, background: T.cream, color: T.dark, minHeight: "100vh" }}>
@@ -435,7 +440,7 @@ export default function App() {
             style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10 }}>
             <input style={{ ...inp, background: "#111", border: "1px solid #333", color: "#fff", flex: 1 }} placeholder="Full Name" value={newsletter.name} onChange={e => setNewsletter(p => ({ ...p, name: e.target.value }))} required />
             <input type="email" style={{ ...inp, background: "#111", border: "1px solid #333", color: "#fff", flex: 1 }} placeholder="Email Address" value={newsletter.email} onChange={e => setNewsletter(p => ({ ...p, email: e.target.value }))} required />
-            <GoldBtn style={{ flexShrink: 0, width: isMobile ? "100%" : "auto" }}>Subscribe</GoldBtn>
+            <GoldBtn type="submit" style={{ flexShrink: 0, width: isMobile ? "100%" : "auto" }}>Subscribe</GoldBtn>
           </form>
         </div>
       </section>
@@ -470,7 +475,7 @@ export default function App() {
               <textarea style={{ ...inp, minHeight: 120, resize: "vertical" }} placeholder="Please briefly describe your legal matter..." value={consultForm.message} onChange={e => setConsultForm(p => ({ ...p, message: e.target.value }))} />
             </div>
             <div style={{ textAlign: "center" }}>
-              <GoldBtn style={{ padding: "14px 40px", fontSize: isMobile ? 13 : 14, width: isMobile ? "100%" : "auto" }}>Submit Consultation Request</GoldBtn>
+              <GoldBtn type="submit" style={{ padding: "14px 40px", fontSize: isMobile ? 13 : 14, width: isMobile ? "100%" : "auto" }}>Submit Consultation Request</GoldBtn>
             </div>
           </form>
         </div>
@@ -512,7 +517,7 @@ export default function App() {
                 <label style={flabel}>Message *</label>
                 <textarea style={{ ...inp, minHeight: 150, resize: "vertical" }} required placeholder="Your message..." value={contactForm.message} onChange={e => setContactForm(p => ({ ...p, message: e.target.value }))} />
               </div>
-              <GoldBtn style={{ width: "100%", padding: "14px" }}>Send Message</GoldBtn>
+              <GoldBtn type="submit" style={{ width: "100%", padding: "14px" }}>Send Message</GoldBtn>
             </form>
           </div>
         </div>
@@ -545,8 +550,8 @@ export default function App() {
                 {col.links.map(link => (
                   <div key={link.l} style={{ color: "#555", fontSize: 13, fontFamily: T.sans, marginBottom: 9, cursor: link.id || link.action ? "pointer" : "default", transition: "color 0.2s" }}
                     onClick={() => { if (link.action) link.action(); else if (link.id) scrollTo(link.id); }}
-                    onMouseEnter={e => { if (link.id || link.action) e.target.style.color = T.gold; }}
-                    onMouseLeave={e => { e.target.style.color = "#555"; }}>
+                    onMouseEnter={e => { if (link.id || link.action) e.currentTarget.style.color = T.gold; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = "#555"; }}>
                     {link.l}
                   </div>
                 ))}

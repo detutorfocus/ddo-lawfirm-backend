@@ -54,7 +54,19 @@ export const adminRouter = createTRPCRouter({
       const { email, firstName, lastName, phone, ...lawyerData } = input;
       const user = await ctx.prisma.user.create({
         data: { email: email.toLowerCase(), passwordHash, firstName, lastName, phone, role: USER_ROLES.LAWYER, isEmailVerified: true, isActive: true,
-          lawyer: { create: { ...lawyerData, certifications: [], courtAdmissions: [], professionalMemberships: [] } } },
+          lawyer: { create: {
+            barNumber: lawyerData.barNumber,
+            title: lawyerData.title,
+            position: lawyerData.position,
+            specializations: lawyerData.specializations,
+            biography: lawyerData.biography,
+            qualifications: lawyerData.qualifications,
+            yearsOfExperience: lawyerData.yearsOfExperience,
+            hourlyRate: lawyerData.hourlyRate,
+            certifications: [] as string[],
+            courtAdmissions: [] as string[],
+            professionalMemberships: [] as string[],
+          } } },
         include: { lawyer: true },
       });
       const { emailService } = await import("../../services/email.service");
