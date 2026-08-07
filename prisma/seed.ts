@@ -43,10 +43,9 @@ const IS_SQLITE = (process.env.DATABASE_URL ?? "").startsWith("file:");
  *   - SQLite:   returns JSON.stringify(arr)  → stored as a String column
  *   - Postgres: returns arr unchanged        → stored as a native String[] column
  */
-function arrayField<T>(arr: T[]): T[] | string {
-  return IS_SQLITE ? (JSON.stringify(arr) as unknown as string) : arr;
+function arrayField<T>(arr: T[]): T[] {
+  return IS_SQLITE ? (JSON.stringify(arr) as unknown as T[]) : arr;
 }
-
 /**
  * Wraps a JS object/null for storage in a Json-typed field:
  *   - SQLite:   returns JSON.stringify(obj)  → stored as a String column
