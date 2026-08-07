@@ -439,7 +439,7 @@ export default function App() {
             style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10 }}>
             <input style={{ ...inp, background: "#111", border: "1px solid #333", color: "#fff", flex: 1 }} placeholder="Full Name" value={newsletter.name} onChange={e => setNewsletter(p => ({ ...p, name: e.target.value }))} required />
             <input type="email" style={{ ...inp, background: "#111", border: "1px solid #333", color: "#fff", flex: 1 }} placeholder="Email Address" value={newsletter.email} onChange={e => setNewsletter(p => ({ ...p, email: e.target.value }))} required />
-            <GoldBtn style={{ flexShrink: 0, width: isMobile ? "100%" : "auto" }}>Subscribe</GoldBtn>
+            <GoldBtn type="submit" style={{ flexShrink: 0, width: isMobile ? "100%" : "auto" }}>Subscribe</GoldBtn>
           </form>
         </div>
       </section>
@@ -474,7 +474,7 @@ export default function App() {
               <textarea style={{ ...inp, minHeight: 120, resize: "vertical" }} placeholder="Please briefly describe your legal matter..." value={consultForm.message} onChange={e => setConsultForm(p => ({ ...p, message: e.target.value }))} />
             </div>
             <div style={{ textAlign: "center" }}>
-              <GoldBtn style={{ padding: "14px 40px", fontSize: isMobile ? 13 : 14, width: isMobile ? "100%" : "auto" }}>Submit Consultation Request</GoldBtn>
+              <GoldBtn type="submit" style={{ padding: "14px 40px", fontSize: isMobile ? 13 : 14, width: isMobile ? "100%" : "auto" }}>Submit Consultation Request</GoldBtn>
             </div>
           </form>
         </div>
@@ -516,7 +516,7 @@ export default function App() {
                 <label style={flabel}>Message *</label>
                 <textarea style={{ ...inp, minHeight: 150, resize: "vertical" }} required placeholder="Your message..." value={contactForm.message} onChange={e => setContactForm(p => ({ ...p, message: e.target.value }))} />
               </div>
-              <GoldBtn style={{ width: "100%", padding: "14px" }}>Send Message</GoldBtn>
+              <GoldBtn type="submit" style={{ width: "100%", padding: "14px" }}>Send Message</GoldBtn>
             </form>
           </div>
         </div>
