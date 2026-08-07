@@ -73,8 +73,14 @@ const Badge = ({ children, style = {} }) => (
   <span style={{ display: "inline-block", background: `${T.gold}18`, color: T.darkGold, padding: "4px 14px", borderRadius: 20, fontSize: 11, fontFamily: T.sans, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", ...style }}>{children}</span>
 );
 
-const GoldBtn = ({ children, onClick, style = {}, outline = false }) => (
-  <button onClick={onClick} style={{
+const GoldBtn = ({ children, onClick, style = {}, outline = false, type = "button" }: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  style?: React.CSSProperties;
+  outline?: boolean;
+  type?: "button" | "submit" | "reset";
+}) => (
+  <button type={type} onClick={onClick} style={{
     background: outline ? "transparent" : `linear-gradient(135deg,${T.gold},${T.darkGold})`,
     color: outline ? T.gold : "#fff",
     border: outline ? `2px solid ${T.gold}` : "none",
@@ -84,7 +90,6 @@ const GoldBtn = ({ children, onClick, style = {}, outline = false }) => (
     ...style,
   }}>{children}</button>
 );
-
 // ── Official Firm Logo — served from /public/images/logo.png
 // Size controls height; width auto-scales to maintain aspect ratio.
 // objectFit: contain ensures the full logo (scales + text) is always visible.
