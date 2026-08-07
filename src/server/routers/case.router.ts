@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, lawyerProcedure, adminProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import { CASE_STATUSES, CASE_PRIORITIES } from "../../lib/constants";
+import { CASE_STATUSES, CASE_PRIORITIES, type CaseStatusType, type CasePriorityType } from "../../lib/constants";
 import { emailService } from "../../services/email.service";
 import crypto from "crypto";
 
@@ -16,8 +16,8 @@ const caseCreateSchema = z.object({
   courtName: z.string().optional(),
   courtLocation: z.string().optional(),
   filingDate: z.date().optional(),
-  status: z.enum(Object.values(CASE_STATUSES) as [string, ...string[]]).default(CASE_STATUSES.PENDING),
-  priority: z.enum(Object.values(CASE_PRIORITIES) as [string, ...string[]]).default(CASE_PRIORITIES.MEDIUM),
+  status: z.enum(Object.values(CASE_STATUSES) as [CaseStatusType, ...CaseStatusType[]]).default(CASE_STATUSES.PENDING),
+  priority: z.enum(Object.values(CASE_PRIORITIES) as [CasePriorityType, ...CasePriorityType[]]).default(CASE_PRIORITIES.MEDIUM),
   practiceArea: z.string().min(1),
   estimatedValue: z.number().positive().optional(),
   retainerAmount: z.number().positive().optional(),
@@ -27,8 +27,8 @@ const caseCreateSchema = z.object({
 const caseUpdateSchema = caseCreateSchema.partial().extend({ id: z.string().cuid() });
 
 const caseFilterSchema = z.object({
-  status: z.enum(Object.values(CASE_STATUSES) as [string, ...string[]]).optional(),
-  priority: z.enum(Object.values(CASE_PRIORITIES) as [string, ...string[]]).optional(),
+  status: z.enum(Object.values(CASE_STATUSES) as [CaseStatusType, ...CaseStatusType[]]).optional(),
+  priority: z.enum(Object.values(CASE_PRIORITIES) as [CasePriorityType, ...CasePriorityType[]]).optional(),
   practiceArea: z.string().optional(),
   lawyerId: z.string().optional(),
   clientId: z.string().optional(),
