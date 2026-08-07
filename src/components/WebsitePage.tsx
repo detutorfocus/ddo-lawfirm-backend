@@ -550,8 +550,8 @@ export default function App() {
                 {col.links.map(link => (
                   <div key={link.l} style={{ color: "#555", fontSize: 13, fontFamily: T.sans, marginBottom: 9, cursor: link.id || link.action ? "pointer" : "default", transition: "color 0.2s" }}
                     onClick={() => { if (link.action) link.action(); else if (link.id) scrollTo(link.id); }}
-                    onMouseEnter={e => { if (link.id || link.action) e.target.style.color = T.gold; }}
-                    onMouseLeave={e => { e.target.style.color = "#555"; }}>
+                    onMouseEnter={e => { if (link.id || link.action) e.currentTarget.style.color = T.gold; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = "#555"; }}>
                     {link.l}
                   </div>
                 ))}
