@@ -151,6 +151,7 @@ model User {
   notifications     Notification[]
   tasks             Task[]          @relation("AssignedTasks")
   createdTasks      Task[]          @relation("CreatedTasks")
+  updatedSettings   WebsiteSettings[]
 
   @@map("users")
 }
@@ -593,4 +594,44 @@ model AuditLog {
   user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// WEBSITE SETTINGS — Singleton row (id always "singleton")
+// ─────────────────────────────────────────────
+
+model WebsiteSettings {
+  id                        String   @id @default(cuid())
+
+  // Firm info
+  firmName                  String   @default("D.D. Onietan (SAN) & Co.")
+  firmTagline               String?
+  firmEmail                 String?
+  firmPhone                 String?
+  firmAddress               String?
+  firmWebsite               String?
+  firmRcNumber              String?
+
+  // Security
+  require2FA                Boolean  @default(false)
+  maxLoginAttempts          Int      @default(5)
+  sessionDays               Int      @default(7)
+  rateLimitMax              Int      @default(100)
+
+  // Feature toggles
+  enableConsultationBooking Boolean  @default(true)
+  enableNewsletter          Boolean  @default(true)
+  enableClientPortal        Boolean  @default(true)
+  enableDocumentUpload      Boolean  @default(true)
+  enableOnlinePayments      Boolean  @default(false)
+  enableVideoConsultation   Boolean  @default(false)
+  maintenanceMode           Boolean  @default(false)
+
+  updatedById               String?
+  updatedBy                 User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@map("website_settings")
 }
