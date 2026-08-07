@@ -18,8 +18,14 @@ datasource db {
 // ─────────────────────────────────────────────
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
+  MANAGING_PARTNER
   LAWYER
+  LEGAL_ASSISTANT
+  SECRETARY
+  RECEPTIONIST
+  FINANCE_OFFICER
   CLIENT
 }
 
