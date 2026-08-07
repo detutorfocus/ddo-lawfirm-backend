@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { USER_ROLES, type UserRoleType } from "@/lib/constants";
+import { USER_ROLES, type UserRoleType } from "@/types/index";
 
 type LoginStep = "credentials" | "2fa";
 type PortalType = "client" | "lawyer" | "admin";
