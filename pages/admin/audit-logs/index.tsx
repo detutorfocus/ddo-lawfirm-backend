@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { usePagination, useDebounce } from "@/hooks/index";
-import { AuditAction } from "@/types/index";
+import { AUDIT_ACTIONS, type AuditActionType } from "@/types/index";
 
 const actionColor: Record<string, string> = {
   LOGIN: "#1565c0", LOGOUT: "#757575", CREATE: "#2e7d32", READ: "#546e7a",
@@ -18,7 +18,7 @@ const actionColor: Record<string, string> = {
 export default function AuditLogsPage() {
   const { isAuthenticated } = useAuth();
   const { page, pageSize, setPage } = usePagination(1, 50);
-  const [actionFilter, setActionFilter] = useState<AuditAction | "">("");
+  const [actionFilter, setActionFilter] = useState<AuditActionType | "">("");
   const [resource, setResource] = useState("");
   const debouncedResource = useDebounce(resource, 300);
 
@@ -41,9 +41,9 @@ export default function AuditLogsPage() {
           {/* Filters */}
           <div className="card" style={{ marginBottom: 18, padding: "0.875rem 1.25rem" }}>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-              <select className="form-select" style={{ minWidth: 160 }} value={actionFilter} onChange={(e) => { setActionFilter(e.target.value as AuditAction | ""); setPage(1); }}>
+              <select className="form-select" style={{ minWidth: 160 }} value={actionFilter} onChange={(e) => { setActionFilter(e.target.value as AuditActionType | ""); setPage(1); }}>
                 <option value="">All Actions</option>
-                {Object.values(AuditAction).map(a => <option key={a} value={a}>{a}</option>)}
+                {Object.values(AUDIT_ACTIONS).map(a => <option key={a} value={a}>{a}</option>)}
               </select>
               <input className="form-input" style={{ flex: 1, minWidth: 160 }} placeholder="Filter by resource (e.g. Case, Document, User)..." value={resource} onChange={(e) => { setResource(e.target.value); setPage(1); }} />
               {(actionFilter || resource) && <button className="btn btn-ghost" style={{ fontSize: "0.8rem" }} onClick={() => { setActionFilter(""); setResource(""); }}>Clear</button>}

@@ -13,6 +13,14 @@
 const fs = require("fs");
 const path = require("path");
 
+// after your require() lines, before doing the file check
+if (process.env.RENDER) {
+  if (!process.env.DATABASE_URL) {
+    fail("DATABASE_URL is not set in Render's Environment tab.");
+  }
+  console.log("Running on Render — using dashboard environment variables.");
+  process.exit(0); // skip the rest of the local file-based checks
+}
 const envPath = path.join(process.cwd(), ".env.local");
 
 function fail(message) {

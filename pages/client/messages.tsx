@@ -148,7 +148,7 @@ export default function ClientMessagesPage() {
                 <div style={{ flex: 1, overflowY: "auto", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: 14, maxHeight: 420 }}>
                   {/* Original message */}
                   {[thread, ...(thread.replies ?? [])].map((msg, i) => {
-                    const isMine = msg.sender?.email === user?.email;
+                    const isMine = msg.senderId === user?.id;
                     return (
                       <div key={msg.id} style={{ display: "flex", justifyContent: isMine ? "flex-end" : "flex-start" }}>
                         <div style={{ maxWidth: "80%", background: isMine ? "var(--color-dark)" : "var(--color-cream)", borderRadius: isMine ? "var(--radius-md) var(--radius-md) 2px var(--radius-md)" : "var(--radius-md) var(--radius-md) var(--radius-md) 2px", padding: "0.75rem 1rem", border: isMine ? "none" : "1px solid var(--color-border)" }}>
@@ -173,7 +173,7 @@ export default function ClientMessagesPage() {
                     onChange={(e) => setReplyContent(e.target.value)} />
                   <button className="btn btn-primary" style={{ fontSize: "0.82rem" }}
                     disabled={!replyContent.trim() || send.isLoading}
-                    onClick={() => send.mutate({ receiverId: thread.sender.email === user?.email ? thread.receiver.id : thread.senderId, content: replyContent, parentId: thread.id })}>
+                    onClick={() => send.mutate({ receiverId: thread.senderId === user?.id ? thread.receiverId : thread.senderId, content: replyContent, parentId: thread.id })}>
                     {send.isLoading ? "Sending..." : "Send Reply"}
                   </button>
                 </div>

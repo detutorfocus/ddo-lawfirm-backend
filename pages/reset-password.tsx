@@ -3,7 +3,7 @@ import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { trpc } from "src/lib/trpc";
+import { trpc } from "@/lib/trpc";
 
 export default function ResetPasswordPage() {
   const router = useRouter();

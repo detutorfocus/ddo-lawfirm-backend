@@ -114,7 +114,7 @@ export default function AdminConsultationsPage() {
                           </div>
                           {c.preferredDate && (
                             <div style={{ color: "var(--color-mid)", fontSize: "0.72rem", marginTop: 2 }}>
-                              Preferred: {c.preferredDate}
+                              Preferred: {new Date(c.preferredDate).toLocaleString("en-NG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                             </div>
                           )}
                         </div>
@@ -149,9 +149,9 @@ export default function AdminConsultationsPage() {
                     ["Preferred Time", selectedConsult.preferredTime ?? "Not specified"],
                     ["Submitted", new Date(selectedConsult.createdAt).toLocaleString("en-NG")],
                   ].map(([k, v]) => (
-                    <div key={k} style={{ display: "flex", gap: 10 }}>
-                      <span style={{ color: "var(--color-light)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 110 }}>{k}</span>
-                      <span style={{ color: "var(--color-dark)", fontSize: "0.85rem" }}>{v}</span>
+                   <div key={String(k)} style={{ display: "flex", gap: 10 }}>
+                     <span style={{ color: "var(--color-light)", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", minWidth: 110 }}>{String(k)}</span>
+                     <span style={{ color: "var(--color-dark)", fontSize: "0.85rem" }}>{String(v)}</span>
                     </div>
                   ))}
                 </div>

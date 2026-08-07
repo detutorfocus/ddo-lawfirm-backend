@@ -6,7 +6,6 @@ import Head from "next/head";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { AppointmentStatus, PRACTICE_AREAS } from "@/types/index";
 
 export default function ClientAppointmentsPage() {
   const { isAuthenticated } = useAuth();

@@ -179,7 +179,11 @@ export const authRouter = createTRPCRouter({
         id: true, email: true, firstName: true, lastName: true,
         role: true, profilePhoto: true, phone: true, twoFactorEnabled: true,
         lastLoginAt: true, createdAt: true,
-        lawyer: { select: { id: true, title: true, position: true, specializations: true } },
+        lawyer: { select: {
+          id: true, title: true, position: true, specializations: true,
+          barNumber: true, biography: true, courtAdmissions: true,
+          qualifications: true, professionalMemberships: true, isAvailable: true,
+        } },
         client: { select: { id: true, clientNumber: true, companyName: true } },
       },
     });

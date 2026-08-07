@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import { trpc } from "src/lib/trpc";
+import { trpc } from "@/lib/trpc";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

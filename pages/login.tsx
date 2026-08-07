@@ -5,8 +5,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
-import { useAuth } from "src/hooks/useAuth";
-import { UserRole } from "src/types/index";
+import { useAuth } from "@/hooks/useAuth";
+import { USER_ROLES, type UserRoleType } from "@/lib/constants";
 
 type LoginStep = "credentials" | "2fa";
 type PortalType = "client" | "lawyer" | "admin";
@@ -23,10 +23,21 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      const redirectMap: Record<UserRole, string> = {
-        ["ADMIN"]: "/admin/dashboard",
-        ["LAWYER"]: "/lawyer/dashboard",
-        ["CLIENT"]: "/client/dashboard",
+      // Maps all 9 roles onto the 3 dashboards that actually exist.
+      // Admin-level roles -> admin dashboard. Case-working staff
+      // (Managing Partner, Lawyer, Legal Assistant) and general staff
+      // (Secretary, Receptionist, Finance Officer) -> lawyer dashboard,
+      // since there is no dedicated dashboard per staff role yet.
+      const redirectMap: Record<UserRoleType, string> = {
+        [USER_ROLES.SUPER_ADMIN]:      "/admin/dashboard",
+        [USER_ROLES.ADMIN]:            "/admin/dashboard",
+        [USER_ROLES.MANAGING_PARTNER]: "/lawyer/dashboard",
+        [USER_ROLES.LAWYER]:           "/lawyer/dashboard",
+        [USER_ROLES.LEGAL_ASSISTANT]:  "/lawyer/dashboard",
+        [USER_ROLES.SECRETARY]:        "/lawyer/dashboard",
+        [USER_ROLES.RECEPTIONIST]:     "/lawyer/dashboard",
+        [USER_ROLES.FINANCE_OFFICER]:  "/lawyer/dashboard",
+        [USER_ROLES.CLIENT]:           "/client/dashboard",
       };
       router.push((router.query.callbackUrl as string) ?? redirectMap[user.role]);
     }

@@ -16,7 +16,7 @@ export default function ClientProfilePage() {
   const [totpCode, setTotpCode] = useState("");
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3500); };
 
-  const { data: profile } = trpc.client.getMyProfile.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: profile } = trpc.clients.getMyProfile.useQuery(undefined, { enabled: isAuthenticated });
   const { data: me } = trpc.auth.me.useQuery(undefined, { enabled: isAuthenticated });
 
   const [form, setForm] = useState({
@@ -24,8 +24,8 @@ export default function ClientProfilePage() {
     companyName: "", address: "", city: "", state: "",
   });
 
-  const updateProfile = trpc.client.updateProfile.useMutation({
-    onSuccess: () => { utils.client.getMyProfile.invalidate(); utils.auth.me.invalidate(); setEditMode(false); showToast("Profile updated successfully!"); },
+  const updateProfile = trpc.clients.updateProfile.useMutation({
+    onSuccess: () => { utils.clients.getMyProfile.invalidate(); utils.auth.me.invalidate(); setEditMode(false); showToast("Profile updated successfully!"); },
     onError: (err) => showToast(`Error: ${err.message}`),
   });
 
@@ -140,7 +140,7 @@ export default function ClientProfilePage() {
                 <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>Two-Factor Authentication</div>
                 <div style={{ color: "var(--color-light)", fontSize: "0.8rem", marginTop: 2 }}>Add an extra layer of security using an authenticator app</div>
               </div>
-              <div style={{ display: "flex", align: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span className={`badge ${me?.twoFactorEnabled ? "badge-success" : "badge-neutral"}`} style={{ fontSize: "0.65rem" }}>{me?.twoFactorEnabled ? "Enabled" : "Disabled"}</span>
                 {!me?.twoFactorEnabled && (
                   <button className="btn btn-outline" style={{ fontSize: "0.78rem" }}

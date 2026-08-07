@@ -47,7 +47,7 @@ export default function LawyerMessagesPage() {
                 </div>
                 <div style={{ flex: 1, overflowY: "auto", padding: "1rem 1.25rem", maxHeight: 380, display: "flex", flexDirection: "column", gap: 12 }}>
                   {[thread, ...(thread.replies ?? [])].map(msg => {
-                    const isMine = msg.sender?.email === user?.email;
+                    const isMine = msg.senderId === user?.id;
                     return (
                       <div key={msg.id} style={{ display: "flex", justifyContent: isMine ? "flex-end" : "flex-start" }}>
                         <div style={{ maxWidth: "80%", background: isMine ? "#1A1A1A" : "var(--color-cream)", borderRadius: 8, padding: "0.75rem 1rem", border: isMine ? "none" : "1px solid var(--color-border)" }}>

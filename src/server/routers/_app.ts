@@ -26,7 +26,7 @@ export const appRouter = createTRPCRouter({
   notification: notificationRouter,
   admin: adminRouter,
   lawyer: lawyerRouter,
-  client: clientRouter,
+  clients: clientRouter,
 });
 
 export type AppRouter = typeof appRouter;
