@@ -33,7 +33,7 @@ export const adminRouter = createTRPCRouter({
       const where: any = {};
       if (input.role) where.role = input.role;
       if (input.isActive !== undefined) where.isActive = input.isActive;
-      if (input.search) where.OR = [{ email: { contains: input.search, mode: "insensitive" } }, { firstName: { contains: input.search, mode: "insensitive" } }, { lastName: { contains: input.search, mode: "insensitive" } }];
+      if (input.search) where.OR = [{ email: { contains: input.search } }, { firstName: { contains: input.search } }, { lastName: { contains: input.search } }];
       const [total, users] = await ctx.prisma.$transaction([
         ctx.prisma.user.count({ where }),
         ctx.prisma.user.findMany({ where, skip: (input.page - 1) * input.pageSize, take: input.pageSize, orderBy: { createdAt: "desc" },
@@ -166,11 +166,11 @@ export const adminRouter = createTRPCRouter({
       if (input.status) where.status = input.status;
       if (input.search) {
         where.OR = [
-          { user: { firstName: { contains: input.search, mode: "insensitive" } } },
-          { user: { lastName: { contains: input.search, mode: "insensitive" } } },
-          { user: { email: { contains: input.search, mode: "insensitive" } } },
-          { companyName: { contains: input.search, mode: "insensitive" } },
-          { clientNumber: { contains: input.search, mode: "insensitive" } },
+          { user: { firstName: { contains: input.search } } },
+          { user: { lastName: { contains: input.search } } },
+          { user: { email: { contains: input.search } } },
+          { companyName: { contains: input.search } },
+          { clientNumber: { contains: input.search } },
         ];
       }
       const [total, clients] = await ctx.prisma.$transaction([

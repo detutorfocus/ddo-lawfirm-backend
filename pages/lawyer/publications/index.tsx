@@ -12,7 +12,25 @@ export default function LawyerPublicationsPage() {
   const { isAuthenticated } = useAuth();
   const utils = trpc.useContext();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: "", excerpt: "", content: "", category: "", tags: "", slug: "", status: "DRAFT" });
+  type PublicationStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
+    const [form, setForm] = useState<{
+      title: string;
+      excerpt: string;
+      content: string;
+      category: string;
+      tags: string;
+      slug: string;
+      status: PublicationStatus;
+    }>({
+      title: "",
+      excerpt: "",
+      content: "",
+      category: "",
+      tags: "",
+      slug: "",
+      status: "DRAFT",
+});
   const [toast, setToast] = useState("");
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3500); };
@@ -96,7 +114,16 @@ export default function LawyerPublicationsPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Status</label>
-                    <select className="form-select" value={form.status} onChange={(e) => setForm(p => ({ ...p, status: e.target.value as string }))}>
+                    <select
+                        className="form-select"
+                        value={form.status}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            status: e.target.value as PublicationStatus,
+                          }))
+                        }
+                      >
                       <option value={"DRAFT"}>Save as Draft</option>
                       <option value={"PUBLISHED"}>Publish Now</option>
                     </select>

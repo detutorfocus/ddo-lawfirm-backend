@@ -9,43 +9,75 @@ import { emailService } from "../../services/email.service";
 export const publicRouter = createTRPCRouter({
   // ── BOOK CONSULTATION (website form)
   bookConsultation: publicProcedure
-    .input(z.object({
+  .input(
+    z.object({
       fullName: z.string().min(2, "Please enter your full name"),
       email: z.string().email("Please enter a valid email"),
       phone: z.string().min(10, "Please enter a valid phone number"),
       serviceNeeded: z.string().optional(),
-      preferredDate: z.string().optional(),
+
+      preferredDate: z
+        .string()
+        .optional()
+        .transform((value) => (value ? new Date(value) : undefined)),
+
       preferredTime: z.string().optional(),
-      message: z.string().min(10, "Please describe your legal matter briefly"),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const consultation = await ctx.prisma.consultationRequest.create({ data: input });
 
-      // Email to client
-      await emailService.sendConsultationAcknowledgement({
-        to: input.email,
-        name: input.fullName,
-        service: input.serviceNeeded ?? "General Legal Advice",
-        preferredDate: input.preferredDate,
-        preferredTime: input.preferredTime,
+      message: z
+        .string()
+        .min(10, "Please describe your legal matter briefly"),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    const consultation =
+      await ctx.prisma.consultationRequest.create({
+        data: {
+          fullName: input.fullName,
+          email: input.email,
+          phone: input.phone,
+          serviceNeeded: input.serviceNeeded,
+          preferredDate: input.preferredDate,
+          preferredTime: input.preferredTime,
+          message: input.message,
+        },
       });
 
-      // Internal alert to admin
-      await emailService.sendInternalAlert({
-        subject: `New Consultation Request — ${input.fullName}`,
-        body: `
-          Name: ${input.fullName}
-          Email: ${input.email}
-          Phone: ${input.phone}
-          Service: ${input.serviceNeeded ?? "Not specified"}
-          Preferred Date: ${input.preferredDate ?? "Not specified"}
-          Message: ${input.message}
-        `,
-      });
+    // Email to client
+    await emailService.sendConsultationAcknowledgement({
+      to: input.email,
+      name: input.fullName,
+      service: input.serviceNeeded ?? "General Legal Advice",
+      preferredDate: input.preferredDate
+        ? input.preferredDate.toISOString()
+        : undefined,
+      preferredTime: input.preferredTime,
+    });
 
-      return { success: true, id: consultation.id, message: "Your consultation request has been received. We will contact you within 24 hours." };
-    }),
+    // Internal alert to admin
+    await emailService.sendInternalAlert({
+      subject: `New Consultation Request — ${input.fullName}`,
+      body: `
+Name: ${input.fullName}
+Email: ${input.email}
+Phone: ${input.phone}
+Service: ${input.serviceNeeded ?? "Not specified"}
+Preferred Date: ${
+        input.preferredDate
+          ? input.preferredDate.toISOString()
+          : "Not specified"
+      }
+Preferred Time: ${input.preferredTime ?? "Not specified"}
+Message: ${input.message}
+      `,
+    });
 
+    return {
+      success: true,
+      id: consultation.id,
+      message:
+        "Your consultation request has been received. We will contact you within 24 hours.",
+    };
+  }),
   // ── NEWSLETTER SUBSCRIBE
   subscribe: publicProcedure
     .input(z.object({
@@ -96,7 +128,15 @@ export const publicRouter = createTRPCRouter({
       message: z.string().min(10),
     }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.prisma.contactSubmission.create({ data: input });
+      await ctx.prisma.contactSubmission.create({
+  data: {
+    name: input.name,
+    email: input.email,
+    phone: input.phone,
+    subject: input.subject,
+    message: input.message,
+  },
+});
 
       await emailService.sendInternalAlert({
         subject: `Website Contact: ${input.subject} — from ${input.name}`,

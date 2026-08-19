@@ -1,4 +1,15 @@
 // src/server/routers/task.router.ts
+//
+// Task.status and Task.priority are validated via z.nativeEnum() against
+// the TASK_STATUSES / TASK_PRIORITIES constants, matching real Postgres
+// enum columns in the current schema.
+//
+// z.nativeEnum() works correctly with plain `as const` objects -- it is
+// NOT exclusive to real TypeScript/Prisma enums. Using it here instead
+// of z.enum(Object.values(...) as [string, ...string[]]) preserves the
+// literal union type (e.g. "TODO" | "IN_PROGRESS" | ...) end-to-end,
+// rather than widening everything back to a generic `string`.
+
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, lawyerProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
@@ -11,13 +22,29 @@ export const taskRouter = createTRPCRouter({
       description: z.string().optional(),
       caseId: z.string().cuid().optional(),
       assignedToId: z.string().cuid(),
-      priority: z.enum(Object.values(TASK_PRIORITIES) as [string, ...string[]]).default(TASK_PRIORITIES.MEDIUM),
+      priority: z.nativeEnum(TASK_PRIORITIES).default(TASK_PRIORITIES.MEDIUM),
       dueDate: z.date().optional(),
       tags: z.array(z.string()).default([]),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Built as an explicit field-by-field object (not spread) --
+      // spreading a rest-destructured object here caused TypeScript to
+      // mis-resolve Prisma's checked/unchecked create-input union and
+      // reject valid scalar foreign keys (caseId) as type `never`. Same
+      // fix pattern already confirmed working elsewhere in this project
+      // (admin.router.ts's createLawyerAccount).
       const task = await ctx.prisma.task.create({
-        data: { ...input, createdById: ctx.session!.user.id, status: TASK_STATUSES.TODO },
+        data: {
+          title: input.title,
+          description: input.description,
+          caseId: input.caseId,
+          assignedToId: input.assignedToId,
+          priority: input.priority,
+          dueDate: input.dueDate,
+          tags: input.tags,
+          createdById: ctx.session!.user.id,
+          status: TASK_STATUSES.TODO,
+        },
         include: { assignedTo: { select: { firstName: true, lastName: true, email: true } } },
       });
 
@@ -27,7 +54,7 @@ export const taskRouter = createTRPCRouter({
           type: "TASK_ASSIGNED",
           title: "New Task Assigned",
           message: `You have been assigned a new task: "${input.title}"${input.dueDate ? ` due ${input.dueDate.toDateString()}` : ""}.`,
-          data: { taskId: task.id },
+          data: JSON.stringify({ taskId: task.id }),
         },
       });
 
@@ -37,10 +64,10 @@ export const taskRouter = createTRPCRouter({
   update: protectedProcedure
     .input(z.object({
       id: z.string().cuid(),
-      status: z.enum(Object.values(TASK_STATUSES) as [string, ...string[]]).optional(),
+      status: z.nativeEnum(TASK_STATUSES).optional(),
       title: z.string().optional(),
       description: z.string().optional(),
-      priority: z.enum(Object.values(TASK_PRIORITIES) as [string, ...string[]]).optional(),
+      priority: z.nativeEnum(TASK_PRIORITIES).optional(),
       dueDate: z.date().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -59,7 +86,7 @@ export const taskRouter = createTRPCRouter({
 
   list: protectedProcedure
     .input(z.object({
-      status: z.enum(Object.values(TASK_STATUSES) as [string, ...string[]]).optional(),
+      status: z.nativeEnum(TASK_STATUSES).optional(),
       caseId: z.string().cuid().optional(),
       assignedToMe: z.boolean().optional(),
       overdue: z.boolean().optional(),

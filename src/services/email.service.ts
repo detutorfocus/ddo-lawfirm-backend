@@ -67,7 +67,7 @@ export const emailService = {
   async sendEmailVerification({ to, name, token }: { to: string; name: string; token: string }) {
     const verifyUrl = `${APP_URL}/verify-email?token=${token}`;
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: "Verify Your Email — D.D. Onietan & Co.",
       html: emailTemplate(`
         ${h1("Welcome to D.D. Onietan & Co.")}
@@ -83,7 +83,7 @@ export const emailService = {
   async sendPasswordReset({ to, name, token }: { to: string; name: string; token: string }) {
     const resetUrl = `${APP_URL}/reset-password?token=${token}`;
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: "Password Reset Request — D.D. Onietan & Co.",
       html: emailTemplate(`
         ${h1("Password Reset Request")}
@@ -100,7 +100,7 @@ export const emailService = {
     to: string; name: string; service: string; preferredDate?: string; preferredTime?: string;
   }) {
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: "Consultation Request Received — D.D. Onietan & Co.",
       html: emailTemplate(`
         ${h1("Thank You for Your Consultation Request")}
@@ -128,7 +128,7 @@ export const emailService = {
       PENDING: "Pending Confirmation", CONFIRMED: "Confirmed", RESCHEDULED: "Rescheduled",
     };
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: `Appointment ${statusLabel[status] ?? status} — D.D. Onietan & Co.`,
       html: emailTemplate(`
         ${h1(`Appointment ${statusLabel[status] ?? status}`)}
@@ -154,7 +154,7 @@ export const emailService = {
     to: string; clientName: string; caseNumber: string; caseTitle: string; update: string;
   }) {
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: `Case Update: ${caseNumber} — D.D. Onietan & Co.`,
       html: emailTemplate(`
         ${h1("Case Update")}
@@ -176,7 +176,7 @@ export const emailService = {
     to: string; clientName: string; invoiceNumber: string; totalAmount: number; dueDate: Date; caseTitle?: string;
   }) {
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: `Invoice ${invoiceNumber} — D.D. Onietan & Co.`,
       html: emailTemplate(`
         ${h1("Invoice")}
@@ -199,7 +199,7 @@ export const emailService = {
   // ── NEWSLETTER WELCOME
   async sendNewsletterWelcome({ to, name }: { to: string; name: string }) {
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: "Welcome to Our Newsletter — D.D. Onietan & Co.",
       html: emailTemplate(`
         ${h1("Welcome to Our Legal Insights Newsletter")}
@@ -215,7 +215,7 @@ export const emailService = {
   // ── CONTACT AUTO-REPLY
   async sendContactAutoReply({ to, name, subject }: { to: string; name: string; subject: string }) {
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: `Re: ${subject} — D.D. Onietan & Co.`,
       html: emailTemplate(`
         ${h1("Message Received")}
@@ -229,7 +229,7 @@ export const emailService = {
   // ── WELCOME NEW LAWYER (admin-created account)
   async sendWelcomeLawyer({ to, name, tempPassword }: { to: string; name: string; tempPassword: string }) {
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: "Your Lawyer Portal Account — D.D. Onietan & Co.",
       html: emailTemplate(`
         ${h1("Welcome to the Lawyer Portal")}
@@ -255,7 +255,7 @@ export const emailService = {
   async sendWelcomeEmployee({ to, name, tempPassword, role }: { to: string; name: string; tempPassword: string; role: string }) {
     const roleLabel = role.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
     await resend.emails.send({
-      from: FROM, to, replyTo: REPLY_TO,
+      from: FROM, to, reply_to: REPLY_TO,
       subject: `Your ${roleLabel} Account — D.D. Onietan & Co.`,
       html: emailTemplate(`
         ${h1(`Welcome to D.D. Onietan & Co.`)}

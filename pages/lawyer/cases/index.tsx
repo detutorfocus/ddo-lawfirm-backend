@@ -14,8 +14,25 @@ export default function LawyerCasesPage() {
   const { isAuthenticated } = useAuth();
   const { page, pageSize, setPage } = usePagination();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | "">("");
-  const [priorityFilter, setPriorityFilter] = useState<string | "">("");
+  const [statusFilter, setStatusFilter] = useState<
+  | ""
+  | "PENDING"
+  | "ACTIVE"
+  | "ARCHIVED"
+  | "HEARING_SCHEDULED"
+  | "JUDGMENT_DELIVERED"
+  | "CLOSED"
+>("");
+const [priorityFilter, setPriorityFilter] = useState<
+  "" | "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+>("");
+const [priority, setPriority] = useState<
+  | ""
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH"
+  | "URGENT"
+>("");
   const debouncedSearch = useDebounce(search, 350);
 
   const { data, isLoading, isFetching } = trpc.case.getAll.useQuery({
@@ -72,7 +89,18 @@ export default function LawyerCasesPage() {
                 className="form-select"
                 style={{ minWidth: 160 }}
                 value={statusFilter}
-                onChange={(e) => { setStatusFilter(e.target.value as string | ""); setPage(1); }}
+                onChange={e =>
+  setStatusFilter(
+    e.target.value as
+      | ""
+      | "PENDING"
+      | "ACTIVE"
+      | "ARCHIVED"
+      | "HEARING_SCHEDULED"
+      | "JUDGMENT_DELIVERED"
+      | "CLOSED"
+  )
+}
               >
                 <option value="">All Statuses</option>
                 {["PENDING","ACTIVE","HEARING_SCHEDULED","JUDGMENT_DELIVERED","CLOSED","ARCHIVED"].map((s) => (
@@ -83,7 +111,17 @@ export default function LawyerCasesPage() {
                 className="form-select"
                 style={{ minWidth: 140 }}
                 value={priorityFilter}
-                onChange={(e) => { setPriorityFilter(e.target.value as string | ""); setPage(1); }}
+                onChange={(e) => {
+  setPriorityFilter(
+    e.target.value as
+      | ""
+      | "LOW"
+      | "MEDIUM"
+      | "HIGH"
+      | "URGENT"
+  );
+  setPage(1);
+}}
               >
                 <option value="">All Priorities</option>
                 {["LOW","MEDIUM","HIGH","URGENT"].map((p) => (

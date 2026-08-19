@@ -5,22 +5,71 @@ import { TRPCError } from "@trpc/server";
 
 export const messageRouter = createTRPCRouter({
   send: protectedProcedure
-    .input(z.object({
+  .input(
+    z.object({
       receiverId: z.string().cuid(),
       content: z.string().min(1).max(5000),
       subject: z.string().optional(),
       caseId: z.string().cuid().optional(),
       parentId: z.string().cuid().optional(),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const receiver = await ctx.prisma.user.findUnique({ where: { id: input.receiverId } });
-      if (!receiver) throw new TRPCError({ code: "NOT_FOUND", message: "Recipient not found." });
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    const receiver = await ctx.prisma.user.findUnique({
+      where: { id: input.receiverId },
+    });
+
+    if (!receiver) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Recipient not found.",
+      });
+    }
+
 
       const message = await ctx.prisma.message.create({
-        data: { senderId: ctx.session!.user.id, ...input },
-        include: { sender: { select: { firstName: true, lastName: true } } },
-      });
+  data: {
+    content: input.content,
+    subject: input.subject,
 
+    sender: {
+      connect: {
+        id: ctx.session!.user.id,
+      },
+    },
+
+    receiver: {
+      connect: {
+        id: input.receiverId,
+      },
+    },
+
+    ...(input.caseId
+      ? {
+          caseId: input.caseId,
+        }
+      : {}),
+
+    ...(input.parentId
+      ? {
+          parent: {
+            connect: {
+              id: input.parentId,
+            },
+          },
+        }
+      : {}),
+  },
+
+  include: {
+    sender: {
+      select: {
+        firstName: true,
+        lastName: true,
+      },
+    },
+  },
+});
       await ctx.prisma.notification.create({
         data: {
           userId: input.receiverId,

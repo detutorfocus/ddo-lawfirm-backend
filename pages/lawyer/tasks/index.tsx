@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { QueryState } from "@/components/QueryState";
+import { type TaskStatusType } from "@/types/index";
 
 const priorityColor: Record<string, string> = { URGENT: "#ef5350", HIGH: "#ff9800", MEDIUM: "#fdd835", LOW: "#66bb6a" };
 const statusStyle: Record<string, { bg: string; color: string }> = {
@@ -19,7 +20,7 @@ const statusStyle: Record<string, { bg: string; color: string }> = {
 export default function LawyerTasksPage() {
   const { isAuthenticated, user } = useAuth();
   const utils = trpc.useContext();
-  const [statusFilter, setStatusFilter] = useState<string | "">("");
+  const [statusFilter, setStatusFilter] = useState<TaskStatusType | "">("");
   const [toast, setToast] = useState("");
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
 
@@ -61,7 +62,7 @@ export default function LawyerTasksPage() {
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               {(["", ...["TODO","IN_PROGRESS","COMPLETED","OVERDUE"]] as const).map((s) => (
-                <button key={s} onClick={() => setStatusFilter(s as string | "")}
+                <button key={s} onClick={() => setStatusFilter(s as TaskStatusType | "")}
                   className="btn"
                   style={{ fontSize: "0.75rem", padding: "0.4rem 0.875rem",
                     background: statusFilter === s ? "var(--color-dark)" : "white",

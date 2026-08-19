@@ -87,7 +87,18 @@ export default function CaseDetailPage() {
                   className="form-select"
                   style={{ fontSize: "0.8rem", padding: "0.5rem 0.875rem" }}
                   value={caseData.status}
-                  onChange={(e) => updateCase.mutate({ id: caseData.id, status: e.target.value as string })}
+                  onChange={(e) =>
+  updateCase.mutate({
+    id: caseData.id,
+    status: e.target.value as
+      | "PENDING"
+      | "ACTIVE"
+      | "ARCHIVED"
+      | "HEARING_SCHEDULED"
+      | "JUDGMENT_DELIVERED"
+      | "CLOSED",
+  })
+}
                 >
                   {["PENDING","ACTIVE","HEARING_SCHEDULED","JUDGMENT_DELIVERED","CLOSED","ARCHIVED"].map((s) => (
                     <option key={s} value={s}>{s.replace(/_/g, " ")}</option>

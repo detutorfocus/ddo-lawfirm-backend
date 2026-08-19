@@ -1,4 +1,14 @@
 // src/server/routers/publication.router.ts
+//
+// Publication.status is validated via z.nativeEnum() against the
+// project's PUBLICATION_STATUSES constant.
+// Publication.tags is a native Postgres String[] column (confirmed via
+// tsc against the generated Prisma client) -- pass/read it as a plain
+// array. Earlier revisions of this file assumed a JSON-encoded String
+// column (a leftover from an earlier SQLite-based schema) and
+// stringified/parsed it accordingly; that assumption no longer matches
+// the actual schema and has been removed.
+
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure, lawyerProcedure, adminProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
@@ -14,7 +24,7 @@ export const publicationRouter = createTRPCRouter({
       category: z.string().min(1),
       tags: z.array(z.string()).default([]),
       coverImage: z.string().url().optional(),
-      status: z.enum(Object.values(PUBLICATION_STATUSES) as [string, ...string[]]).default(PUBLICATION_STATUSES.DRAFT),
+      status: z.nativeEnum(PUBLICATION_STATUSES).default(PUBLICATION_STATUSES.DRAFT),
     }))
     .mutation(async ({ ctx, input }) => {
       const lawyer = await ctx.prisma.lawyer.findUnique({ where: { userId: ctx.session!.user.id } });
@@ -25,7 +35,14 @@ export const publicationRouter = createTRPCRouter({
 
       return ctx.prisma.publication.create({
         data: {
-          ...input,
+          title: input.title,
+          content: input.content,
+          excerpt: input.excerpt,
+          slug: input.slug,
+          category: input.category,
+          tags: input.tags,
+          coverImage: input.coverImage,
+          status: input.status,
           authorId: lawyer.id,
           publishedAt: input.status === PUBLICATION_STATUSES.PUBLISHED ? new Date() : null,
         },
@@ -36,16 +53,16 @@ export const publicationRouter = createTRPCRouter({
     .input(z.object({
       category: z.string().optional(),
       search: z.string().optional(),
-      status: z.enum(Object.values(PUBLICATION_STATUSES) as [string, ...string[]]).optional(),
+      status: z.nativeEnum(PUBLICATION_STATUSES).optional(),
       page: z.number().int().min(1).default(1),
       pageSize: z.number().int().min(1).max(20).default(9),
     }))
     .query(async ({ ctx, input }) => {
       const where: any = { status: input.status ?? PUBLICATION_STATUSES.PUBLISHED };
-      if (input.category) where.category = { contains: input.category, mode: "insensitive" };
+      if (input.category) where.category = { contains: input.category };
       if (input.search) where.OR = [
-        { title: { contains: input.search, mode: "insensitive" } },
-        { excerpt: { contains: input.search, mode: "insensitive" } },
+        { title: { contains: input.search } },
+        { excerpt: { contains: input.search } },
         { tags: { has: input.search } },
       ];
 
@@ -83,13 +100,17 @@ export const publicationRouter = createTRPCRouter({
       excerpt: z.string().optional(),
       category: z.string().optional(),
       tags: z.array(z.string()).optional(),
-      status: z.enum(Object.values(PUBLICATION_STATUSES) as [string, ...string[]]).optional(),
+      status: z.nativeEnum(PUBLICATION_STATUSES).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
+      const { id, tags, ...data } = input;
       return ctx.prisma.publication.update({
         where: { id },
-        data: { ...data, publishedAt: data.status === PUBLICATION_STATUSES.PUBLISHED ? new Date() : undefined },
+        data: {
+          ...data,
+          tags,
+          publishedAt: data.status === PUBLICATION_STATUSES.PUBLISHED ? new Date() : undefined,
+        },
       });
     }),
 

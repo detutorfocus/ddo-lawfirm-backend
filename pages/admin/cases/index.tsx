@@ -10,7 +10,15 @@ export default function AdminCasesPage() {
   const { isAuthenticated } = useAuth();
   const { page, pageSize, setPage } = usePagination();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string | "">("");
+  const [status, setStatus] = useState<
+  | ""
+  | "PENDING"
+  | "ACTIVE"
+  | "ARCHIVED"
+  | "HEARING_SCHEDULED"
+  | "JUDGMENT_DELIVERED"
+  | "CLOSED"
+>("");
   const dSearch = useDebounce(search, 350);
   const { data, isLoading } = trpc.case.getAll.useQuery({ page, pageSize, search: dSearch || undefined, status: status || undefined, sortBy: "updatedAt", sortOrder: "desc" }, { enabled: isAuthenticated });
   const statusColors: Record<string, { bg: string; color: string }> = {
@@ -33,7 +41,24 @@ export default function AdminCasesPage() {
           <div className="card" style={{ marginBottom: 16, padding: "0.875rem 1.25rem" }}>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <input className="form-input" style={{ flex: 1, minWidth: 220 }} placeholder="Search cases..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
-              <select className="form-select" style={{ minWidth: 160 }} value={status} onChange={e => { setStatus(e.target.value as string | ""); setPage(1); }}>
+             <select
+  className="form-select"
+  style={{ minWidth: 160 }}
+  value={status}
+  onChange={e => {
+    setStatus(
+      e.target.value as
+        | ""
+        | "PENDING"
+        | "ACTIVE"
+        | "ARCHIVED"
+        | "HEARING_SCHEDULED"
+        | "JUDGMENT_DELIVERED"
+        | "CLOSED"
+    );
+    setPage(1);
+  }}
+>
                 <option value="">All Statuses</option>
                 {["PENDING","ACTIVE","HEARING_SCHEDULED","JUDGMENT_DELIVERED","CLOSED","ARCHIVED"].map(s => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
               </select>

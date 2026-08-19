@@ -16,8 +16,8 @@ const caseCreateSchema = z.object({
   courtName: z.string().optional(),
   courtLocation: z.string().optional(),
   filingDate: z.date().optional(),
-  status: z.enum(Object.values(CASE_STATUSES) as [string, ...string[]]).default(CASE_STATUSES.PENDING),
-  priority: z.enum(Object.values(CASE_PRIORITIES) as [string, ...string[]]).default(CASE_PRIORITIES.MEDIUM),
+  status: z.nativeEnum(CASE_STATUSES).default(CASE_STATUSES.PENDING),
+  priority: z.nativeEnum(CASE_PRIORITIES).default(CASE_PRIORITIES.MEDIUM),
   practiceArea: z.string().min(1),
   estimatedValue: z.number().positive().optional(),
   retainerAmount: z.number().positive().optional(),
@@ -27,8 +27,8 @@ const caseCreateSchema = z.object({
 const caseUpdateSchema = caseCreateSchema.partial().extend({ id: z.string().cuid() });
 
 const caseFilterSchema = z.object({
-  status: z.enum(Object.values(CASE_STATUSES) as [string, ...string[]]).optional(),
-  priority: z.enum(Object.values(CASE_PRIORITIES) as [string, ...string[]]).optional(),
+  status: z.nativeEnum(CASE_STATUSES).optional(),
+  priority: z.nativeEnum(CASE_PRIORITIES).optional(),
   practiceArea: z.string().optional(),
   lawyerId: z.string().optional(),
   clientId: z.string().optional(),
@@ -106,7 +106,7 @@ export const caseRouter = createTRPCRouter({
 
       if (filters.status) where.status = filters.status;
       if (filters.priority) where.priority = filters.priority;
-      if (filters.practiceArea) where.practiceArea = { contains: filters.practiceArea, mode: "insensitive" };
+      if (filters.practiceArea) where.practiceArea = { contains: filters.practiceArea };
       if (filters.clientId) where.clientId = filters.clientId;
 
       if (filters.lawyerId) {
@@ -115,10 +115,10 @@ export const caseRouter = createTRPCRouter({
 
       if (search) {
         where.OR = [
-          { title: { contains: search, mode: "insensitive" } },
-          { caseNumber: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } },
-          { courtName: { contains: search, mode: "insensitive" } },
+          { title: { contains: search } },
+          { caseNumber: { contains: search } },
+          { description: { contains: search } },
+          { courtName: { contains: search } },
         ];
       }
 
@@ -238,7 +238,7 @@ export const caseRouter = createTRPCRouter({
           type: "CASE_UPDATE",
           title: "New Case Assignment",
           message: `You have been assigned to case ${caseData.caseNumber}: ${caseData.title} as ${input.role}.`,
-          data: { caseId: input.caseId },
+          data: JSON.stringify({ caseId: input.caseId }),
         },
       });
 
@@ -294,7 +294,20 @@ export const caseRouter = createTRPCRouter({
       notes: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const hearing = await ctx.prisma.hearing.create({ data: input });
+      const hearing = await ctx.prisma.hearing.create({
+  data: {
+    hearingDate: input.hearingDate,
+    court: input.court,
+    judge: input.judge,
+    hearingType: input.hearingType,
+    notes: input.notes,
+    case: {
+      connect: {
+        id: input.caseId,
+      },
+    },
+  },
+});
 
       // Update case status
       await ctx.prisma.case.update({

@@ -13,16 +13,22 @@ export const lawyerRouter = createTRPCRouter({
       search: z.string().optional(),
     }))
     .query(async ({ ctx, input }) => {
+      // NOTE: specializations is a JSON-encoded String column on SQLite
+      // (see prisma/schema.sqlite.prisma), not a native array -- the
+      // Postgres-only `{ has: ... }` array filter does not apply here.
+      // A substring match against the serialized JSON text (e.g.
+      // `["Corporate Law","Litigation"]`) is a reasonable approximation
+      // for SQLite dev use.
       const where: any = { user: { isActive: true } };
       if (input.specialization) {
-        where.specializations = { has: input.specialization };
+        where.specializations = { contains: input.specialization };
       }
       if (input.search) {
         where.OR = [
-          { user: { firstName: { contains: input.search, mode: "insensitive" } } },
-          { user: { lastName: { contains: input.search, mode: "insensitive" } } },
-          { position: { contains: input.search, mode: "insensitive" } },
-          { specializations: { has: input.search } },
+          { user: { firstName: { contains: input.search } } },
+          { user: { lastName: { contains: input.search } } },
+          { position: { contains: input.search } },
+          { specializations: { contains: input.search } },
         ];
       }
 
@@ -263,11 +269,11 @@ export const clientRouter = createTRPCRouter({
       const where: any = {};
       if (input.search) {
         where.OR = [
-          { user: { firstName: { contains: input.search, mode: "insensitive" } } },
-          { user: { lastName: { contains: input.search, mode: "insensitive" } } },
-          { user: { email: { contains: input.search, mode: "insensitive" } } },
-          { clientNumber: { contains: input.search, mode: "insensitive" } },
-          { companyName: { contains: input.search, mode: "insensitive" } },
+          { user: { firstName: { contains: input.search } } },
+          { user: { lastName: { contains: input.search } } },
+          { user: { email: { contains: input.search } } },
+          { clientNumber: { contains: input.search } },
+          { companyName: { contains: input.search } },
         ];
       }
 

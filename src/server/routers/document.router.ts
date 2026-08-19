@@ -13,7 +13,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, lawyerProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import { DOCUMENT_TYPES } from "../../lib/constants";
+import { DOCUMENT_TYPES, DocumentTypeValue } from "../../lib/constants";
 import { s3Service } from "../../services/s3.service";
 
 const ALLOWED_MIME_TYPES = [
@@ -34,7 +34,12 @@ export const documentRouter = createTRPCRouter({
       fileName: z.string().min(1).max(255),
       mimeType: z.string().refine(v => ALLOWED_MIME_TYPES.includes(v), "File type not allowed"),
       fileSize: z.number().int().positive().max(MAX_FILE_SIZE, "File exceeds 50MB limit"),
-      documentType: z.enum(Object.values(DOCUMENT_TYPES) as [string, ...string[]]).default(DOCUMENT_TYPES.OTHER),
+      documentType: z.enum(
+  Object.values(DOCUMENT_TYPES) as [
+    typeof DOCUMENT_TYPES[keyof typeof DOCUMENT_TYPES],
+    ...typeof DOCUMENT_TYPES[keyof typeof DOCUMENT_TYPES][]
+  ]
+).default(DOCUMENT_TYPES.OTHER),
       caseId: z.string().cuid().optional(),
       clientId: z.string().cuid().optional(),
       // NEW: direct recipient — a specific lawyer or admin userId to
@@ -250,8 +255,8 @@ export const documentRouter = createTRPCRouter({
       if (filters.clientId) where.clientId = filters.clientId;
       if (filters.type) where.type = filters.type;
       if (search) where.OR = [
-        { title: { contains: search, mode: "insensitive" } },
-        { fileName: { contains: search, mode: "insensitive" } },
+        { title: { contains: search } },
+        { fileName: { contains: search } },
       ];
 
       const [total, documents] = await ctx.prisma.$transaction([
