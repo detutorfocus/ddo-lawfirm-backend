@@ -11,6 +11,7 @@
 // ── Re-export client-safe constants & types
 export {
   USER_ROLES,
+  ADMIN_LEVEL_ROLES,
   CASE_STATUSES,
   CASE_PRIORITIES,
   APPOINTMENT_STATUSES,

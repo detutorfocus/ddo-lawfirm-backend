@@ -7,17 +7,18 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { ADMIN_LEVEL_ROLES, type UserRoleType } from "@/types/index";
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const { data: stats, isLoading: statsLoading } = trpc.admin.getDashboard.useQuery(undefined, {
-    enabled: isAuthenticated && user?.role === "ADMIN",
+    enabled: isAuthenticated && !!user && ADMIN_LEVEL_ROLES.includes(user.role as UserRoleType),
   });
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.push("/login");
-    if (!isLoading && isAuthenticated && user?.role !== "ADMIN") router.push("/login");
+    if (!isLoading && isAuthenticated && user && !ADMIN_LEVEL_ROLES.includes(user.role as UserRoleType)) router.push("/login");
   }, [isLoading, isAuthenticated, user, router]);
 
   if (isLoading || statsLoading) {
