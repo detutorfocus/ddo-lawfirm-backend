@@ -9,16 +9,26 @@ import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { ADMIN_LEVEL_ROLES, type UserRoleType } from "@/types/index";
 
+// ADMIN_LEVEL_ROLES is a narrow `readonly ["SUPER_ADMIN", "ADMIN"]` tuple
+// via `as const` -- TypeScript's ReadonlyArray.includes() requires its
+// argument to be assignable to that narrow element type, not the wider
+// 9-role UserRoleType union. This helper safely checks membership for
+// any UserRoleType value without weakening ADMIN_LEVEL_ROLES' own type
+// elsewhere (e.g. its use in trpc.ts's enforceRole()).
+function isAdminLevelRole(role: UserRoleType): boolean {
+  return (ADMIN_LEVEL_ROLES as readonly UserRoleType[]).includes(role);
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const { data: stats, isLoading: statsLoading } = trpc.admin.getDashboard.useQuery(undefined, {
-    enabled: isAuthenticated && !!user && ADMIN_LEVEL_ROLES.includes(user.role as UserRoleType),
+    enabled: isAuthenticated && !!user && isAdminLevelRole(user.role as UserRoleType),
   });
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.push("/login");
-    if (!isLoading && isAuthenticated && user && !ADMIN_LEVEL_ROLES.includes(user.role as UserRoleType)) router.push("/login");
+    if (!isLoading && isAuthenticated && user && !isAdminLevelRole(user.role as UserRoleType)) router.push("/login");
   }, [isLoading, isAuthenticated, user, router]);
 
   if (isLoading || statsLoading) {
